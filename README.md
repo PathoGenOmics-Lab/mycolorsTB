@@ -15,8 +15,8 @@ devtools::install_github("PathoGenOmics-Lab/mycolorsTB")
 ```
 ## Vector of colors
 ``` r
-show(mycolorsTB::mycolors)
-show(mycolorsTB::classicTB)
+show(mycolorsTB::mycolors) #vector with lineage names
+show(mycolorsTB::classicTB) #vector witout lineage names
 ```
 <p align="center">
   <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:1000px; height: auto;">
