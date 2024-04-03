@@ -3,7 +3,7 @@
   <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolors.png" title="mycolors logo" style="width:650px; height: auto;">
 </p>
 
-### R Color package for Mycobacterium tuberculosis complex
+### R Color package for _Mycobacterium tuberculosis_ complex
 
 ## Installation
 You can install the released version of mycolorsTB from GitHub
