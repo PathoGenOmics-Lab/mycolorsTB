@@ -36,8 +36,8 @@ data <- data.frame(
 
 # Fill: Plot with mycolors lineages names lineages names
 ggplot(data, aes(x = x, y = y, fill = group)) +
-  geom_bar(stat = "identity") + # scale_fill_manual(values = mycolors)
-  scale_fill_mycolors() +
+  geom_bar(stat = "identity") + 
+  scale_fill_mycolors() + # scale_fill_manual(values = mycolors)
   theme_minimal()
 ```
 
