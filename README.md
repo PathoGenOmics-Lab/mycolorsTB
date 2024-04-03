@@ -1,2 +1,2 @@
 # MycolorTB
-Color package for Mycobacterium tuberculosis complex
+R Color package for Mycobacterium tuberculosis complex
