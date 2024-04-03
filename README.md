@@ -11,7 +11,7 @@ with:
 
 ``` r
 install.packages("devtools")
-devtools::install_github("ConesaLab/RColorConesa")
+devtools::install_github("PathoGenOmics-Lab/mycolorsTB")
 ```
 ## Vector of colors
 ``` r
