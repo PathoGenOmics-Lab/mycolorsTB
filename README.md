@@ -1,6 +1,6 @@
 # mycolorsTB
 <p align="center">
-  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolors.png" title="AMAP logo" style="width:650px; height: auto;">
+  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolors.png" title="mycolors logo" style="width:650px; height: auto;">
 </p>
 
 ### R Color package for Mycobacterium tuberculosis complex
@@ -18,6 +18,10 @@ devtools::install_github("ConesaLab/RColorConesa")
 show(mycolorsTB::mycolors)
 show(mycolorsTB::classicTB)
 ```
+<p align="center">
+  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:650px; height: auto;">
+</p>
+
 ## Example - ggplot()
 ```
 library(ggplot2)
