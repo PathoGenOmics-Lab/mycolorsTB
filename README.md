@@ -19,7 +19,7 @@ show(mycolorsTB::mycolors)
 show(mycolorsTB::classicTB)
 ```
 <p align="center">
-  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:650px; height: auto;">
+  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:1000px; height: auto;">
 </p>
 
 ## Example - ggplot()
