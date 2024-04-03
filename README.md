@@ -11,15 +11,15 @@ with:
 
 ``` r
 install.packages("devtools")
-devtools::install_github("ConesaLab/RColorConesa")
+devtools::install_github("PathoGenOmics-Lab/mycolorsTB")
 ```
 ## Vector of colors
 ``` r
-show(mycolorsTB::mycolors)
-show(mycolorsTB::classicTB)
+show(mycolorsTB::mycolors) #vector with lineage names
+show(mycolorsTB::classicTB) #vector witout lineage names
 ```
 <p align="center">
-  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:650px; height: auto;">
+  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title=mycolors palette" style="width:1000px; height: auto;">
 </p>
 
 ## Example - ggplot()
@@ -36,26 +36,25 @@ data <- data.frame(
 
 # Fill: Plot with mycolors lineages names lineages names
 ggplot(data, aes(x = x, y = y, fill = group)) +
-  geom_bar(stat = "identity") + # scale_fill_manual(values = mycolors)
-  scale_fill_mycolors() +
+  geom_bar(stat = "identity") + 
+  scale_fill_mycolors() + # scale_fill_manual(values = mycolors)
   theme_minimal()
 ```
 
 ## HEX codes
-| Lineage      | Hex Value  |
-|:------------:|-----------:|
-| A1           | #d1ae00    |
-| A2           | #8ef5c8    |
-| A3           | #73c2ff    |
-| A4           | #ff9cdb    |
-| L1           | #ff3091    |
-| L2           | #001aff    |
-| L3           | #8a0bd2    |
-| L4           | #ff0000    |
-| L5           | #995200    |
-| L6           | #1eb040    |
-| L7           | #fbff00    |
-| L8           | #ff9d00    |
-| L9           | #37ff30    |
-| L10          | #8fbda1    |
+- **A1:** `#d1ae00`
+- **A2:** `#8ef5c8`
+- **A3:** `#73c2ff`
+- **A4:** `#ff9cdb`
+- **L1:** `#ff3091`
+- **L2:** `#001aff`
+- **L3:** `#8a0bd2`
+- **L4:** `#ff0000`
+- **L5:** `#995200`
+- **L6:** `#1eb040`
+- **L7:** `#fbff00`
+- **L8:** `#ff9d00`
+- **L9:** `#37ff30`
+- **L10:** `#8fbda1`
+
 
