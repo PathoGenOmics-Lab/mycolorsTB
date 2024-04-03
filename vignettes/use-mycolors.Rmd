@@ -1,0 +1,88 @@
+---
+title: "Using the mycolors and classicTB Palettes"
+author: "Paula Ruiz-Rodriguez"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{use-mycolors}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+```{r}
+library(ggplot2)
+library(mycolorsTB)
+# Example data
+data <- data.frame(
+  x = 1:14,
+  y = rnorm(14),
+  group = rep(c(paste0("A", 1:4), paste0("L", 1:10)), each = 1)
+)
+
+# color: Plot with mycolors lineages names
+ggplot(data, aes(x = x, y = y, color = group)) +
+  geom_point(size = 3) +
+  scale_color_mycolors() + # scale_color_manual(values = mycolors)
+  theme_minimal()
+```
+
+```{r}
+library(ggplot2)
+library(mycolorsTB)
+
+# Example data
+data <- data.frame(
+  x = 1:14,
+  y = rnorm(14),
+  group = rep(c(paste0("A", 1:4), paste0("L", 1:10)), each = 1)
+)
+
+# Fill: Plot with mycolors lineages names lineages names
+ggplot(data, aes(x = x, y = y, fill = group)) +
+  geom_bar(stat = "identity") + # scale_fill_manual(values = mycolors)
+  scale_fill_mycolors() +
+  theme_minimal()
+```
+
+
+```{r}
+library(ggplot2)
+library(mycolorsTB)
+# Example data
+data <- data.frame(
+  x = 1:14,
+  y = rnorm(14),
+  group = rep(c(paste0("J", 1:14)), each = 1)
+)
+
+# color: Plot with mycolors lineages names
+ggplot(data, aes(x = x, y = y, color = group)) +
+  geom_point(size = 3) +
+  scale_color_classicTB() + # scale_color_manual(values = classicTB)
+  theme_minimal()
+```
+
+```{r}
+library(ggplot2)
+library(mycolorsTB)
+
+# Example data
+data <- data.frame(
+  x = 1:14,
+  y = rnorm(14),
+  group = rep(c(paste0("J", 1:14)), each = 1)
+)
+
+# Fill: Plot with mycolors lineages names lineages names
+ggplot(data, aes(x = x, y = y, fill = group)) +
+  geom_bar(stat = "identity") +
+  scale_fill_classicTB() + # scale_fill_manual(values = classicTB)
+  theme_minimal()
+```
