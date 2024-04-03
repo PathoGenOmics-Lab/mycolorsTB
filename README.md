@@ -40,6 +40,9 @@ ggplot(data, aes(x = x, y = y, fill = group)) +
   scale_fill_mycolors() + # scale_fill_manual(values = mycolors)
   theme_minimal()
 ```
+<p align="center">
+  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/example1.png" title=mycolors palette" style="width:1000px; height: auto;">
+</p>
 
 ## HEX codes
 - **A1:** `#d1ae00`
