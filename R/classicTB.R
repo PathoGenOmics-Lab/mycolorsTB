@@ -22,9 +22,18 @@ classicTB <- c("#d1ae00", "#8ef5c8", "#73c2ff", "#ff9cdb",
                "#995200", "#1eb040", "#fbff00", "#ff9d00",
                "#37ff30","#8fbda1")
 
+#' ClassicTB Color Palette
+#'
+#' This palette provides a set of colors derived from the `PGO` theme,
+#' suitable for creating distinctive and attractive visualizations.
+#'
+#' @name PGO
+#' @export
+pathogenomics <- c("#c01718","#305595","#3c5824","#d9d0ca","#9ec4e8","#c0b3a7","#fdf2f8","#020203")
+
 #' Scale Color for ggplot2 Using mycolors Palette
 #'
-#' This function provides a color scale for ggplot2 plots, using the custom mycolors palette.
+#' This function provides a color scale for ggplot2 plots, using the custom mycolors palette with lineage names.
 #'
 #' @import ggplot2
 #' @export
@@ -34,7 +43,7 @@ scale_color_mycolors <- function() {
 
 #' Scale Fill for ggplot2 Using mycolors Palette
 #'
-#' This function provides a fill scale for ggplot2 plots, using the custom mycolors palette.
+#' This function provides a color scale for ggplot2 plots, using the custom mycolors palette with lineage names.
 #'
 #' @import ggplot2
 #' @export

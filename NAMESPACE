@@ -2,6 +2,7 @@
 
 export(classicTB)
 export(mycolors)
+export(pathogenomics)
 export(scale_color_classicTB)
 export(scale_color_mycolors)
 export(scale_fill_classicTB)

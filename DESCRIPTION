@@ -2,7 +2,7 @@ Package: mycolorsTB
 Title: A color package for Mycobacterium tuberculosis data
 Version: 0.1.0
 Authors@R: 
-    person("Paula", "Ruiz-Rodriguez", , "paula.ruiz-rodriguez@uv.es", role = c("aut", "cre"),
+    person("Paula", "Ruiz-Rodriguez", , "paula.ruiz.rodriguez@csic.es", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0003-0727-5974"))
 Description: Provides a carefully selected color palette for visualizing Mycobacterium tuberculosis data, enhancing data interpretation and presentation.
 License: GPL (>= 3)

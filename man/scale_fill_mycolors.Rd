@@ -7,5 +7,5 @@
 scale_fill_mycolors()
 }
 \description{
-This function provides a fill scale for ggplot2 plots, using the custom mycolors palette.
+This function provides a color scale for ggplot2 plots, using the custom mycolors palette with lineage names.
 }
