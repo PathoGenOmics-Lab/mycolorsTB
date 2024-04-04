@@ -34,7 +34,7 @@ data <- data.frame(
   group = rep(c(paste0("A", 1:4), paste0("L", 1:10)), each = 1)
 )
 
-# Fill: Plot with mycolors lineages names lineages names
+# Fill: Plot with mycolors lineages names
 ggplot(data, aes(x = x, y = y, fill = group)) +
   geom_bar(stat = "identity") + 
   scale_fill_mycolors() + # scale_fill_manual(values = mycolors)
