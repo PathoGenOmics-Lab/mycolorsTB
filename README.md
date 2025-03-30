@@ -60,4 +60,7 @@ ggplot(data, aes(x = x, y = y, fill = group)) +
 - **L9:** `#37ff30`
 - **L10:** `#8fbda1`
 
-
+## Newick tree
+```
+(L8,((L1,(L7,(L4,(L2,L3)))),(L5,((A2,(A3,A4)),(A1,(L10,(L6,L9)))))));
+```
