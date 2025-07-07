@@ -30,10 +30,10 @@ The package includes three main palettes. You can preview any of them using the 
 
 ```{r, fig.width=7, fig.height=5, out.width="100%"}
 # View the main palette with lineage names
-view_palette("mycolors")
+view_palette(palette_name = "mycolors")
 
 # View the pathogenomics palette
-view_palette("pathogenomics")
+view_palette(palette_name = "pathogenomics")
 ```
 
 ## 2. Usage with ggplot2
