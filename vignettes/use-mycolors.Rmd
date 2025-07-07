@@ -1,88 +1,108 @@
 ---
-title: "Using the mycolors and classicTB Palettes"
+title: "Using mycolorsTB: A Guide and Gallery"
 author: "Paula Ruiz-Rodriguez"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{use-mycolors}
+  %\VignetteIndexEntry{Using mycolorsTB: A Guide and Gallery}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r, include = FALSE}
+```{r, setup, include = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
+library(mycolorsTB)
 ```
 
+## Introduction
 
-```{r}
-library(ggplot2)
-library(mycolorsTB)
-# Example data
-data <- data.frame(
-  x = 1:14,
-  y = rnorm(14),
-  group = rep(c(paste0("A", 1:4), paste0("L", 1:10)), each = 1)
-)
+This vignette serves as a comprehensive guide to the `mycolorsTB` package. It explains the available color palettes and provides a gallery of examples to demonstrate how they can be used to create distinctive and attractive visualizations for *Mycobacterium tuberculosis* data.
 
-# color: Plot with mycolors lineages names
-ggplot(data, aes(x = x, y = y, color = group)) +
-  geom_point(size = 3) +
-  scale_color_mycolors() + # scale_color_manual(values = mycolors)
-  theme_minimal()
+## 1. Viewing Available Palettes
+
+The package includes three main palettes. You can preview any of them using the `view_palette()` function.
+
+* `mycolors`: A palette with 14 colors, named according to TB lineages (L1, A2, etc.).
+* `classicTB`: The same 14 colors, but without names, for general use.
+* `pathogenomics`: A smaller palette with 8 colors from the PathoGenOmics Lab theme.
+
+```{r, fig.width=7, fig.height=5, out.width="100%"}
+# View the main palette with lineage names
+view_palette("mycolors")
+
+# View the pathogenomics palette
+view_palette("pathogenomics")
 ```
 
-```{r}
-library(ggplot2)
-library(mycolorsTB)
+## 2. Usage with ggplot2
 
-# Example data
+The primary purpose of `mycolorsTB` is to integrate seamlessly with `ggplot2`. The package provides helper functions like `scale_color_*` and `scale_fill_*` to simplify this process.
+
+```{r, fig.width=7, fig.height=4, out.width="100%"}
+library(ggplot2)
+
+# To ensure the vignette builds correctly, we define the lineage names locally.
+# The functions from the package will use the actual package data.
+local_mycolors <- c("A1"="#d1ae00", "A2"="#8ef5c8", "A3"="#73c2ff", "A4"="#ff9cdb",
+                    "L1"="#ff3091", "L2"="#001aff", "L3"="#8a0bd2", "L4"="#ff0000",
+                    "L5"="#995200", "L6"="#1eb040", "L7"="#fbff00", "L8"="#ff9d00",
+                    "L9"="#37ff30", "L10"="#8fbda1")
+
+# Example data using the local color vector
 data <- data.frame(
-  x = 1:14,
-  y = rnorm(14),
-  group = rep(c(paste0("A", 1:4), paste0("L", 1:10)), each = 1)
+  x = factor(names(local_mycolors), levels = names(local_mycolors)),
+  y = abs(rnorm(14, mean = 10, sd = 3)),
+  group = names(local_mycolors)
 )
 
-# Fill: Plot with mycolors lineages names lineages names
-ggplot(data, aes(x = x, y = y, fill = group)) +
-  geom_bar(stat = "identity") + # scale_fill_manual(values = mycolors)
-  scale_fill_mycolors() +
-  theme_minimal()
-```
-
-
-```{r}
-library(ggplot2)
-library(mycolorsTB)
-# Example data
-data <- data.frame(
-  x = 1:14,
-  y = rnorm(14),
-  group = rep(c(paste0("J", 1:14)), each = 1)
-)
-
-# color: Plot with mycolors lineages names
-ggplot(data, aes(x = x, y = y, color = group)) +
-  geom_point(size = 3) +
-  scale_color_classicTB() + # scale_color_manual(values = classicTB)
-  theme_minimal()
-```
-
-```{r}
-library(ggplot2)
-library(mycolorsTB)
-
-# Example data
-data <- data.frame(
-  x = 1:14,
-  y = rnorm(14),
-  group = rep(c(paste0("J", 1:14)), each = 1)
-)
-
-# Fill: Plot with mycolors lineages names lineages names
+# Create a bar plot using the fill scale
 ggplot(data, aes(x = x, y = y, fill = group)) +
   geom_bar(stat = "identity") +
-  scale_fill_classicTB() + # scale_fill_manual(values = classicTB)
-  theme_minimal()
+  scale_fill_mycolors() +
+  theme_minimal() +
+  labs(title = "Bar Plot with scale_fill_mycolors()", x = "Lineage", y = "Value") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+## 3. Plotting Trees and Cladograms
+
+The package includes helper functions to directly plot phylogenetic trees and cladograms from a Newick format string.
+
+### Phylogenetic Tree
+
+The `plot_tb_tree()` function visualizes the tree with branch lengths representing evolutionary distance.
+
+```{r, fig.width=7, fig.height=4, message=FALSE, warning=FALSE, out.width="100%"}
+tree_text <- "(L8,((L1,(L7,(L4,(L2,L3)))),(L5,((A2,(A3,A4)),(A1,(L10,(L6,L9)))))));"
+plot_tb_tree(tree_text)
+```
+
+### Cladogram
+
+The `plot_tb_cladogram()` function visualizes the tree topology, ignoring branch lengths. This is useful for focusing on the relationships between lineages.
+
+```{r, fig.width=7, fig.height=4, message=FALSE, warning=FALSE, out.width="100%"}
+plot_tb_cladogram(tree_text)
+```
+
+## 4. Generating Custom Palettes
+
+What if you need more colors than are available in a palette? The `tb_palette()` function uses color interpolation to generate any number of colors you need.
+
+```{r, fig.width=7, fig.height=5, out.width="100%"}
+# Generate 25 colors from the 'classicTB' palette
+my_custom_colors <- tb_palette(25, "classicTB")
+
+# Create a plot to display the interpolated colors
+plot(1:25, 
+     rep(1, 25),
+     col = my_custom_colors, 
+     pch = 19, 
+     cex = 5,
+     xlab = "",
+     ylab = "",
+     axes = FALSE,
+     main = "25 Interpolated Colors from 'classicTB' Palette")
 ```
