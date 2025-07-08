@@ -2,10 +2,13 @@
 % Please edit documentation in R/classicTB.R
 \name{scale_color_classicTB}
 \alias{scale_color_classicTB}
-\title{Scale Color for ggplot2 Using mycolors Palette}
+\title{Scale Color for ggplot2 Using classicTB Palette}
 \usage{
 scale_color_classicTB()
 }
+\value{
+A ggplot2 scale object.
+}
 \description{
-This function provides a color scale for ggplot2 plots, using the custom classicTB palette.
+Applies the \code{classicTB} palette to the color aesthetic in a ggplot.
 }

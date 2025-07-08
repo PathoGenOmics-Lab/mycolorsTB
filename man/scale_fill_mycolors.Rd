@@ -6,6 +6,9 @@
 \usage{
 scale_fill_mycolors()
 }
+\value{
+A ggplot2 scale object.
+}
 \description{
-This function provides a color scale for ggplot2 plots, using the custom mycolors palette with lineage names.
+Applies the \code{mycolors} palette to the fill aesthetic in a ggplot.
 }

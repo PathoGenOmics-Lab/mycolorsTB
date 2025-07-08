@@ -5,13 +5,15 @@
 \alias{mycolors}
 \title{Mycolors Color Palette}
 \format{
-An object of class \code{character} of length 14.
+A character vector of 14 hex color codes, named with lineage identifiers.
+}
+\source{
+Color palette designed by the PathoGenOmics Lab.
 }
 \usage{
 mycolors
 }
 \description{
-A palette of colors designed for visually appealing plots. The \code{mycolors} palette
-includes a range of colors suitable for a variety of plotting needs. With lineages names.
+A named vector of 14 colors designed for visualizing Mycobacterium tuberculosis lineages.
 }
 \keyword{datasets}
