@@ -120,7 +120,7 @@ view_palette <- function(palette_name = "mycolors") {
 #' @importFrom ape read.tree
 #' @import ggtree
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tree_text <- "(L8,((L1,(L7,(L4,(L2,L3)))),(L5,((A2,(A3,A4)),(A1,(L10,(L6,L9)))))));"
 #' plot_tb_tree(tree_text)
 #' }
@@ -143,7 +143,7 @@ plot_tb_tree <- function(newick_text) {
 #' @importFrom ape read.tree
 #' @import ggtree
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tree_text <- "(L8,((L1,(L7,(L4,(L2,L3)))),(L5,((A2,(A3,A4)),(A1,(L10,(L6,L9)))))));"
 #' plot_tb_cladogram(tree_text)
 #' }
