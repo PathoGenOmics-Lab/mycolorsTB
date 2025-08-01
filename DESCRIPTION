@@ -1,6 +1,6 @@
 Package: mycolorsTB
 Type: Package
-Title: 'mycolorsTB': A Color Package for Mycobacterium tuberculosis Data
+Title: Color Palettes for Mycobacterium Tuberculosis Data Visualization
 Version: 0.1.1
 Authors@R:
     person(given = "Paula",
@@ -12,7 +12,7 @@ Description: Colour palettes and helper functions for visualising
     'ggplot2' and 'ggtree'. The package provides predefined palettes,
     scale functions, tree/cladogram helpers, and convenient preview tools
     to ensure consistent branding in pathogen-omics visualisations. The
-    palettes were developed as part of the mycolorsTB project
+    palettes were developed as part of the 'mycolorsTB' project
     <https://github.com/PathoGenOmics-Lab/mycolorsTB>.
 License: GPL-3
 Encoding: UTF-8
