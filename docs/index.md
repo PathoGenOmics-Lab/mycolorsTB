@@ -40,6 +40,22 @@ ggplot(lineages, aes(x = lineage, y = isolates, fill = lineage)) +
 ![Bar chart of isolate counts, one bar per lineage, each filled with its mycolorsTB colour, with a legend naming all fourteen lineages](assets/quickstart.png#only-light){ width="760" }
 ![Bar chart of isolate counts, one bar per lineage, each filled with its mycolorsTB colour, with a legend naming all fourteen lineages](assets/quickstart-dark.png#only-dark){ width="760" }
 
+!!! note "These pages document 0.1.2; CRAN ships 0.1.1"
+    The block above needs 0.1.2, which is on `main` and not yet submitted. On the
+    CRAN release the scales take no arguments at all, so
+    `scale_fill_mycolors(name = "Lineage")` fails with
+    `unused argument (name = "Lineage")`. Drop the argument and name the legend
+    from `labs()` instead:
+
+    ```r
+    scale_fill_mycolors() +
+      labs(x = NULL, y = "Isolates", fill = "Lineage")
+    ```
+
+    `packageVersion("mycolorsTB")` tells you which one you have, and
+    [Getting started](getting-started.md#3-check-which-one-you-have) sets the two
+    versions side by side.
+
 That is the whole interface for the common case: name your groups after the
 lineages and add one scale. Nothing else in the plot changes.
 

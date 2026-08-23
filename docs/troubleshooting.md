@@ -32,25 +32,48 @@ print(ggtree(tr) + geom_tiplab(align = TRUE))   # fails
 print(ggtree(tr) + geom_tiplab(align = FALSE))  # renders
 ```
 
-Fix: update ggtree. The versions that call the old name predate the ggplot2 4.0
-rename, and ggtree ships from Bioconductor rather than CRAN, so
-`update.packages()` will not reach it:
+Fix: the honest answer is that `BiocManager::install("ggtree")` on its own is
+probably not it, and it is worth knowing why before you run it. Bioconductor
+releases in lockstep, and BiocManager picks the release your R version is
+entitled to. On R 4.4 that is Bioconductor 3.20, whose newest ggtree is 3.14.0,
+which is the version that calls `is.waive()`. So the obvious command reports
+that there is nothing to do:
 
 ```r
 BiocManager::install("ggtree")
+#> Bioconductor version 3.20 (BiocManager 1.30.25), R 4.4.2 (2024-10-31)
+#> ... warning: package(s) not installed when version(s) same as or greater
+#> than current; use `force = TRUE` to re-install: 'ggtree'
 ```
 
-Check what you have before and after:
+Check where you stand, all four together, because the pairing is what matters
+and no one of them tells you anything alone:
 
 ```r
+R.version.string
+BiocManager::version()
 packageVersion("ggtree")
 packageVersion("ggplot2")
 ```
 
-The other half of the pairing is ggplot2 itself: the call worked for as long as
-ggplot2 still provided `is.waive()`. Holding ggplot2 back is therefore also a
-way out, but it is the wrong end of the problem to fix, and it pins you behind
-the rest of the ecosystem.
+The upgrade that reaches a fixed ggtree is R plus Bioconductor, not ggtree on
+its own: move to an R version whose Bioconductor release carries a ggtree that
+has caught up with the rename, then reinstall the Bioconductor stack against it.
+`BiocManager::install(version = "...")` refuses a release your R cannot have,
+and the refusal is the check that tells you which way round to do it:
+
+```r
+BiocManager::install(version = "3.22")
+#> Error: Bioconductor version '3.22' requires R version '4.5'; use
+#>   `version = '3.20'` with R version 4.4; see https://bioconductor.org/install
+```
+
+If you cannot move R, the remaining way out is the other half of the pairing:
+hold ggplot2 below 4.0, where `is.waive()` still exists. That pins you behind
+the rest of the ecosystem, so it is a way to keep working rather than a fix. The
+`align = FALSE` escape in the reproducer above is not available through this
+package: `plot_tb_tree()` and `plot_tb_cladogram()` each take `newick_text` and
+nothing else, and `align = TRUE` is written into the call they build.
 
 ## My bars came out grey
 
@@ -160,9 +183,10 @@ version and will not install a package built for another one.
 
 ## The same script gives different colours than it used to
 
-Three behaviours changed in 0.1.2, and all three change output rather than
-raising an error, so a script that ran on 0.1.1 can run on 0.1.2 and give
-something else. Check with `packageVersion("mycolorsTB")`.
+Three behaviours changed in 0.1.2. One changes what a successful call returns;
+the other two turn something that used to succeed quietly into an error. Either
+way, a script that ran on 0.1.1 behaves differently on 0.1.2. Check with
+`packageVersion("mycolorsTB")`.
 
 ### `tb_palette()` no longer interpolates below the palette size
 

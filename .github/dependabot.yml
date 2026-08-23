@@ -80,12 +80,16 @@ updates:
   # reader's library.
   #
   # One way this ecosystem is unlike the other, worth knowing before trusting
-  # the green tick: none of the checks that gate that merge build the site.
-  # docs.yml runs on a push to main and not on pull requests, so a bump that
-  # breaks the build is found after it is merged rather than on the pull request
-  # that made it. The same workflow bounds the cost: its deploy job runs only
-  # after the build job passes, so a broken bump leaves the published pages
-  # exactly as they were until someone fixes it.
+  # the green tick. The site does get built on the pull request: docs.yml runs
+  # `mkdocs build --strict` on anything touching `docs/**`, and the file this
+  # entry bumps, docs/requirements.txt, is under `docs/**`. So a bump that
+  # breaks the build goes red there. What that red tick is not is a required
+  # check, and `gh pr merge --auto` waits only for the required ones, so the
+  # merge happens beside it. Marking it required is not the fix it looks like;
+  # the comment at the top of .github/workflows/docs.yml says why. What bounds
+  # the cost instead is that same workflow's deploy job, which runs only after
+  # the build and reference jobs pass, so a broken bump leaves the published
+  # pages exactly as they were until someone fixes it.
   - package-ecosystem: pip
     directory: "/docs"
     schedule:

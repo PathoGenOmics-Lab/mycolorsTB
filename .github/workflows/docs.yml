@@ -20,7 +20,9 @@ name: Docs
 # Triggers:
 #   - push to the default branch touching the site, the R sources or the
 #     reference checker
-#   - manual run (workflow_dispatch)
+#   - pull request touching the same paths, which runs the two checking jobs and
+#     stops short of publishing
+#   - manual run (workflow_dispatch), which publishes only from main
 #
 # The paths list is wider than the site itself, for two reasons. NEWS.md is on
 # it because docs/changelog.md does not contain the release notes, it includes
@@ -28,6 +30,19 @@ name: Docs
 # published page. R/ is on it because of the `reference` job below: renaming an
 # argument is a change to whether the reference page is true, even though it
 # touches nothing under docs/, and this workflow is what says so.
+#
+# Neither of the two checking jobs is a required status check on main, so both
+# report and neither gates. That is a decision rather than an oversight, and the
+# alternative is worse as this file stands. The eight required contexts on main
+# all come from ci.yml, codeql.yml and dependency-review.yml, which trigger on
+# `pull_request` with no `paths:` filter and therefore always report. This
+# workflow is the only path-filtered one in the repository, so making "Build the
+# site" required would leave a pull request that touches only tests/ waiting for
+# a check that never starts. Requiring these two means first dropping the
+# `paths:` list from the `pull_request:` trigger below, which buys the gate at
+# the price of the reference job's R install on every pull request. Until that
+# trade is made, a red strict build has to be read rather than relied on to
+# block a merge.
 #
 # To publish from a laptop without CI, `mkdocs build` and upload the `site/`
 # directory; `mkdocs gh-deploy` does not reach the published site.
@@ -165,7 +180,15 @@ jobs:
     needs: [build, reference]
     # Never from a pull request. The two jobs above run there to check the site;
     # this one is what makes it public, and that only happens from main.
-    if: github.event_name != 'pull_request'
+    #
+    # The branch test is not redundant with that. `workflow_dispatch` above can
+    # be aimed at any branch, and the `github-pages` environment is configured
+    # to accept deployments from `main` only. Without the second half of this
+    # condition, a manual run from a feature branch builds the site, checks the
+    # reference, and then fails at the environment gate with a branch policy
+    # rejection: a red run for a workflow that did everything it was asked to.
+    # With it, the same run does the checking and simply declines to publish.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 

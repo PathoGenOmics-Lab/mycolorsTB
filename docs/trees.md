@@ -26,8 +26,10 @@ layers to the object they hand back.
     BiocManager::install("ggtree")
     ```
 
-    The palette objects and the four ggplot2 scales work without it. Only these
-    two functions need it.
+    Only these two functions call ggtree, but the package imports its whole
+    namespace, so `library(mycolorsTB)` fails until ggtree is installed.
+    Installing it is not optional even if all you want is the palettes and the
+    scales.
 
 ## Tip labels have to be lineage names
 

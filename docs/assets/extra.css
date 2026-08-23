@@ -32,13 +32,14 @@
   --mc-surface-sunken: #f0f2f5;
 }
 
-/* The dark scheme is chosen, not derived: #305595 on the slate ground is 1.6:1
+/* The dark scheme is chosen, not derived: #305595 on the slate ground is 2.19:1
  * and unreadable. Rather than lighten it by eye, the dark accent is
  * pathogenomics[5], #9ec4e8, which is the pale blue of the same lab palette and
- * measures 7.16:1 on Material's slate ground (#2e303e). */
+ * measures 8.83:1 on Material's slate ground (#1e2129,
+ * hsla(225deg,15%,14%,1)). */
 [data-md-color-scheme="slate"] {
-  --mc-accent: #9ec4e8;          /* 7.16:1 on the slate ground */
-  --mc-accent-strong: #cfe3f7;   /* 9.94:1 */
+  --mc-accent: #9ec4e8;          /* 8.83:1 on the slate ground */
+  --mc-accent-strong: #cfe3f7;   /* 12.25:1 */
   --mc-hairline: rgba(255, 255, 255, 0.12);
   --mc-hairline-strong: rgba(255, 255, 255, 0.22);
   --mc-surface: rgba(255, 255, 255, 0.035);

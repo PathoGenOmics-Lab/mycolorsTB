@@ -325,10 +325,10 @@ pairs that move furthest:
 | `A1` / `L8` | 16.6 | 2.4 | 1.5 |
 | `L8` / `L9` | 51.0 | 6.9 | 16.3 |
 | `L4` / `L6` | 75.6 | 7.0 | 24.7 |
-| `L1` / `L10` | 61.9 | 7.3 | 34.2 |
+| `L1` / `L10` | 61.9 | 7.2 | 34.2 |
 | `L7` / `L9` | 22.4 | 8.3 | 3.7 |
-| `L2` / `L3` | 11.5 | 9.8 | 5.5 |
-| `L4` / `L5` | 23.4 | 14.8 | 1.9 |
+| `L2` / `L3` | 11.5 | 9.7 | 5.5 |
+| `L4` / `L5` | 23.4 | 14.8 | 1.8 |
 | `A2` / `L10` | 14.0 | 11.1 | 12.6 |
 
 ![Two rows of fourteen swatches, the lower row the mycolors palette as shipped and the upper row the same colours under a simulation of deuteranopia, in which several distinct colours become the same gold or the same olive](assets/cvd-deuteranopia.png#only-light){ width="820" }

@@ -54,16 +54,22 @@ theme:
     - navigation.tracking
     - navigation.top
     - navigation.footer
-    # A breadcrumb above each page title, so a reader arriving from search knows
-    # where they landed.
+    # Nothing renders from this today, for the same reason as the line above:
+    # Material only draws the breadcrumb when a page has more than one ancestor,
+    # and on a flat nav every page has none. It is here so that the day a section
+    # appears above these pages, a reader arriving from search gets a path
+    # telling them where they landed instead of nothing.
     - navigation.path
-    # `navigation.instant` is deliberately not enabled, for two reasons that
-    # point the same way. On eight pages of prose there is very little to save:
-    # the whole built site is smaller than one of the palette figures on it. And
-    # the i18n plugin, which this site is laid out to accept later, warns that
-    # instant loading breaks the language switcher's contextual link, so
-    # switching to Spanish from the reference page would land on the Spanish home
-    # page. Turning it on now would be a nicety to undo the day Spanish arrives.
+    # `navigation.instant` is deliberately not enabled. The reason that decides
+    # it is the i18n plugin, which this site is laid out to accept later: it
+    # warns that instant loading breaks the language switcher's contextual link,
+    # so switching to Spanish from the reference page would land on the Spanish
+    # home page. Turning it on now would be a nicety to undo the day Spanish
+    # arrives. There is little on the other side of the trade. Instant loading
+    # does not fetch fewer bytes: a navigation requests the same HTML document
+    # either way, and the theme's stylesheet and script are in the browser cache
+    # from the first page on. What it saves is parsing and initialising them
+    # again, on eight pages that average about 50 kB of HTML each.
     - search.suggest
     - search.highlight
     - search.share
@@ -190,7 +196,9 @@ validation:
 # and load it, what the colours are, how to put them on a plot, how to put them
 # on a tree, then the per function detail, then the two pages you only open when
 # something is wrong or has changed. Every entry title matches the page's own H1,
-# so the sidebar and the page agree.
+# so the sidebar and the page agree, with one exception: Home is headed with the
+# package name, because it is the landing page and a reader arriving from CRAN or
+# from the README should see what the package is called first.
 nav:
   - Home: index.md
   - Getting started: getting-started.md

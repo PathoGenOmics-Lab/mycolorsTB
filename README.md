@@ -121,7 +121,8 @@ ggplot(data, aes(x = x, y = y, fill = group)) +
 **<https://pathogenomics-lab.github.io/mycolorsTB/>** is the manual: what each
 palette is for, every export with its signature and defaults, and the failures
 that come up when a plot or a tree refuses to draw. The same pages are in
-[`docs/`](docs/) in this repository.
+[`docs/`](https://github.com/PathoGenOmics-Lab/mycolorsTB/tree/main/docs) in this
+repository.
 
 | | |
 |---|---|

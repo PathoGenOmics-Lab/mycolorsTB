@@ -1,6 +1,6 @@
-# mycolorsTB 0.1.2
+## mycolorsTB 0.1.2
 
-## Bug fixes
+### Bug fixes
 
 * `view_palette()` no longer triggers the ggplot2 deprecation warning about the
   `size` aesthetic for lines. The tile borders now use `linewidth`.
@@ -30,7 +30,7 @@
   functions went on to build a plot with an empty axis range instead of
   reporting the problem.
 
-## Improvements
+### Improvements
 
 * The four `scale_*_mycolors()` and `scale_*_classicTB()` functions accept `...`
   and pass it to the underlying ggplot2 scale, so arguments such as `name`,
@@ -58,6 +58,6 @@
   that all 14 entries and the legend title fit in the figure. Both README
   figures are rebuilt by the scripts in `.github/scripts/`.
 
-# mycolorsTB 0.1.1
+## mycolorsTB 0.1.1
 
 * First CRAN release.
