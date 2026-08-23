@@ -1,0 +1,159 @@
+name: Docs
+
+# Build the Material for MkDocs site, check the hand-written reference against
+# the package it documents, and hand the result to GitHub Pages.
+#
+# The site is uploaded as an artifact and deployed by GitHub's own action rather
+# than pushed to a branch. `mkdocs gh-deploy --force` is the other way to do
+# this, and it is the wrong one here: it builds the site and force-pushes it onto
+# a `gh-pages` branch, which this repository has never had and now never needs.
+# With the repository's Pages source set to GitHub Actions, that branch would be
+# written and then ignored, so the workflow would go on succeeding while the
+# published pages quietly stayed as they were. A green deploy that publishes
+# nothing is worse than a failing one.
+#
+# Three things come with the artifact route: no `gh-pages` branch and no
+# force-push, no git identity to configure, and a real deployment in the
+# `github-pages` environment, which records what was published and can be rolled
+# back.
+#
+# Triggers:
+#   - push to the default branch touching the site, the R sources or the
+#     reference checker
+#   - manual run (workflow_dispatch)
+#
+# The paths list is wider than the site itself, for two reasons. NEWS.md is on
+# it because docs/changelog.md does not contain the release notes, it includes
+# them from the repository root, so a release note added there is a change to a
+# published page. R/ is on it because of the `reference` job below: renaming an
+# argument is a change to whether the reference page is true, even though it
+# touches nothing under docs/, and this workflow is what says so.
+#
+# To publish from a laptop without CI, `mkdocs build` and upload the `site/`
+# directory; `mkdocs gh-deploy` does not reach the published site.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+      - ".github/scripts/check_reference_arguments.R"
+      - "NEWS.md"
+      - "R/**"
+      - "NAMESPACE"
+      - "DESCRIPTION"
+  workflow_dispatch:
+
+# Read the repository to build it. The deploy job asks for what it needs on its
+# own, rather than every step in the file holding the right to publish.
+permissions:
+  contents: read
+
+# One deployment at a time, and never cancel one halfway: an interrupted publish
+# leaves the site in whatever state it reached.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build the site
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - name: Install build dependencies
+        run: pip install -r docs/requirements.txt
+      # --strict turns a link to a page or a heading that does not exist into a
+      # failure, so a renamed section is caught here rather than by a reader.
+      - name: Build, strictly
+        run: mkdocs build --strict
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  reference:
+    name: The reference page matches formals()
+    runs-on: ubuntu-latest
+
+    # The same install as the `document` job in ci.yml, which is set at 20 for
+    # the same dependency tree, plus one R CMD INSTALL of a package with no
+    # compiled code. Nothing here builds anything of this package's own.
+    timeout-minutes: 20
+
+    # docs/reference.md is hand-written prose, on purpose: the .Rd files already
+    # say what the arguments are, and the page exists to say what they are for.
+    # The price of writing it by hand is that it can go stale silently, and the
+    # part that goes stale worst is the argument list, because prose about a
+    # renamed argument still reads perfectly.
+    #
+    # This job is what stops that choice from turning into a slow lie. It
+    # installs the package from this checkout, reads the signature the page
+    # states for each export, and compares the argument names against formals().
+    # Nothing else on the page is touched, so the prose stays prose. When it
+    # fails it names the function and the argument that disagree, and the fix is
+    # a sentence, not a regeneration.
+    #
+    # It gates the deploy below rather than merely reporting, because the failure
+    # mode it exists to prevent is a published page that confidently documents an
+    # argument the package does not have.
+    #
+    # Why the package is installed rather than parsed: an argument list read out
+    # of R/ is a guess about what R would do with it, and this package's
+    # exported scale_* functions take `...` and pass it on, which is exactly the
+    # kind of signature a parser gets wrong. formals() of the installed package
+    # is the thing the reader will actually call.
+
+    env:
+      # pak and remotes read GITHUB_PAT when they hit the GitHub API. Without a
+      # token they fall back to unauthenticated requests, which share one rate
+      # limit per runner IP and fail in bursts that look like network faults.
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      # ggtree is an Import and comes from Bioconductor rather than CRAN. pak
+      # brings the Bioconductor repositories itself, so nothing extra is needed
+      # here; the long version of that, and what to check when a run fails to
+      # find ggtree, is written down above the jobs block in ci.yml.
+      - uses: r-lib/actions/setup-r-dependencies@v2
+
+      # Plain R CMD INSTALL rather than a wrapper. The package has no compiled
+      # code, so this is a copy and a byte-compile, and it neither builds the
+      # vignette nor renders the manual: the wrappers that do would pull pandoc
+      # and roxygen2 into a job whose whole purpose is to read eleven argument
+      # lists.
+      - name: Install the package from this checkout
+        run: R CMD INSTALL .
+
+      - name: Compare the reference page with formals()
+        run: Rscript .github/scripts/check_reference_arguments.R
+
+  deploy:
+    name: Publish to GitHub Pages
+    needs: [build, reference]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Only this job can publish, and only it holds the rights to do so.
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

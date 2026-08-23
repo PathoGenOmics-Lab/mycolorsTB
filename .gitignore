@@ -8,3 +8,6 @@ inst/doc
 .DS_Store
 .quarto
 __pycache__/
+
+# Documentation site (MkDocs) build output
+/site/
