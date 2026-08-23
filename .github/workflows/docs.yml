@@ -44,6 +44,23 @@ on:
       - "R/**"
       - "NAMESPACE"
       - "DESCRIPTION"
+  # The same paths on a pull request, because the two jobs below that CHECK
+  # anything are worth nothing if they only run after a merge. The strict build
+  # and the reference drift check exist to catch a change before it lands, which
+  # is the whole reason every other workflow here runs on pull_request. Only the
+  # deploy job is restricted to main, below: publishing from a pull request would
+  # put unreviewed pages on the live site, and a run from a fork has no rights to
+  # do it anyway.
+  pull_request:
+    paths:
+      - "docs/**"
+      - "mkdocs.yml"
+      - ".github/workflows/docs.yml"
+      - ".github/scripts/check_reference_arguments.R"
+      - "NEWS.md"
+      - "R/**"
+      - "NAMESPACE"
+      - "DESCRIPTION"
   workflow_dispatch:
 
 # Read the repository to build it. The deploy job asks for what it needs on its
@@ -51,11 +68,15 @@ on:
 permissions:
   contents: read
 
-# One deployment at a time, and never cancel one halfway: an interrupted publish
-# leaves the site in whatever state it reached.
+# One deployment at a time on main, and never cancel one halfway: an interrupted
+# publish leaves the site in whatever state it reached. Pull request runs publish
+# nothing, so they get their own group per pull request and supersede themselves
+# the way CI does. Sharing the single `pages` group with them would queue every
+# pull request build behind every other one for no benefit, and a superseded
+# build would go on holding the lock a real deployment might be waiting for.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('docs-pr-{0}', github.event.pull_request.number) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -142,6 +163,9 @@ jobs:
   deploy:
     name: Publish to GitHub Pages
     needs: [build, reference]
+    # Never from a pull request. The two jobs above run there to check the site;
+    # this one is what makes it public, and that only happens from main.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
