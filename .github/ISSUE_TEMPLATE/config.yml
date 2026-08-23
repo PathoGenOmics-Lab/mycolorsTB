@@ -1,0 +1,24 @@
+# Blank issues stay available. The two forms cover the reports this package will
+# actually receive, but a colour package gets messages that fit no form, for
+# example "these two lineage colours are indistinguishable in my figure", and
+# having nowhere to put that is worse than an unstructured issue.
+blank_issues_enabled: true
+
+# One link, and it was checked: https://cran.r-project.org/package=mycolorsTB
+# resolves. There is no documentation site to point at, the README and the
+# vignette are the documentation, and both are one click away from the repository
+# front page and from CRAN. A contact link sits on the busiest page of the
+# tracker, the new-issue chooser, so a dead one costs more than a missing one.
+#
+# There is deliberately no Discussions entry. The Discussions tab is off in the
+# repository settings, so any /discussions URL here would 404 for every reporter.
+# If the tab is switched on later, add an entry pointing at the Q&A category
+# rather than at the bare /discussions path, and route the question wording in
+# bug_report.yml and feature_request.yml back to it.
+contact_links:
+  - name: The package on CRAN
+    url: https://cran.r-project.org/package=mycolorsTB
+    about: >-
+      The released version, the reference manual, the vignette, and the check
+      results across platforms. Worth comparing against your installed version
+      before reporting a defect.

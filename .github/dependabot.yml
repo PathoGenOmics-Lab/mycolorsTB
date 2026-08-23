@@ -1,0 +1,87 @@
+# Dependency updates.
+#
+# Nothing configured this before, because nothing in this repository was
+# automated at all. The reason to write the file out rather than switching
+# Dependabot on with its defaults is that the defaults are the noisy shape:
+# weekly, one pull request per dependency, majors mixed in with patches. Noise
+# of that shape gets closed unread, which is worse than no updates because it
+# looks like updates. This one keeps the updates and drops the noise:
+#
+#   * monthly, not weekly
+#   * grouped, so one pull request carries the whole ecosystem's routine bumps
+#   * majors kept apart, in their own single pull request, because those are the
+#     ones that change what a job does and want a person
+#
+# There is exactly one ecosystem below, and that is a fact about Dependabot
+# rather than an omission here. Dependabot understands package managers, not
+# language repositories: it has no ecosystem for CRAN and none for Bioconductor,
+# and this package ships no Cargo.toml, no package.json and no requirements
+# file for it to read. The `uses:` lines in the workflows are the only manifest
+# in the repository it can parse, so they are the only thing it is pointed at.
+#
+# That means the DESCRIPTION dependencies, ggplot2, ape, ggtree and grDevices,
+# are deliberately not covered. Nothing here could cover them. Dependabot cannot
+# read an Imports field, and ggtree is not even on CRAN: it comes from
+# Bioconductor, on its own release train. What watches those instead is R CMD
+# check in CI, run against R-devel with the dependencies resolved fresh on every
+# run, so an upstream release that breaks this package turns a check red without
+# anyone having to bump a version number first.
+#
+# That is the right instrument for this package, not a consolation prize for the
+# missing one. view_palette() passed the `size` aesthetic to geom_tile, which
+# ggplot2 deprecated in 3.4.0. A version-bump pull request would not have caught
+# it, because the code still ran: it warned, and the warning told users to
+# report the issue to the authors. The function is called in the vignette and in
+# its own examples, but nothing ever ran them: this package has never had CI, so
+# the deprecation warning only surfaced when a person ran the package by hand. A
+# check that runs the examples is what closes that gap; a dependency bot is not.
+#
+# `schedule` below is Dependabot's own timer, not a cron in GitHub Actions. The
+# only workflow in this repository that runs on a schedule is the stale sweep,
+# which has nothing to hang off but time.
+#
+# Security updates are a separate mechanism, switched on in the repository
+# settings rather than here, and unaffected by any of this. Worth checking that
+# it is actually on, because the two halves are separate switches: Dependabot
+# alerts raise the advisory, and Dependabot security updates are what open a
+# pull request for it, the day it lands, major or not. With only the first
+# enabled the advisory is raised and nothing else happens, and this monthly
+# grouped schedule then really is the fastest this repository patches.
+
+version: 2
+
+updates:
+  # The actions the workflows themselves pin. These go stale silently: a
+  # deprecated runner image, or a Node version dropped from an action, is only
+  # noticed when a job starts warning, or fails.
+  #
+  # The minor and patch group merges itself once CI passes; see
+  # .github/workflows/dependabot-auto-merge.yml. The major group never does. A
+  # major of r-lib/actions or actions/checkout changes what the step does, not
+  # just which build of it runs, and this package has one maintainer, so an
+  # unattended merge there would be the first anyone heard of it.
+  #
+  # Worth knowing before writing a new `uses:` line, because this entry is what
+  # makes it true: Dependabot rewrites the ref after the `@`. A ref that looks
+  # like a version gets bumped. That is fine for the bare major refs this
+  # repository pins, `@vN` on every action, since a bump there is a bump of the
+  # action itself, and it is the reason the R version the checks run against is
+  # passed as the `r-version:` input to r-lib/actions/setup-r rather than being
+  # written into an action ref. An input is out of this file's reach; a ref is
+  # not, and a check that quietly moved to a different R would go on passing
+  # while proving something other than what it claims.
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "actions"
+    groups:
+      actions-routine:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      actions-major:
+        patterns: ["*"]
+        update-types: ["major"]

@@ -1,0 +1,187 @@
+name: Bug report
+description: A function that fails, or a plot that comes out wrong
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!IMPORTANT]
+        > **Is this a question rather than a defect?**
+        >
+        > The test is not how serious it is, it is what you are saying. If you can
+        > show the package is wrong, this is the right form. If you are asking
+        > *whether* it is wrong, or how to get a particular figure out of it, open
+        > a blank issue and label it `question` instead. Discussions is not
+        > enabled on this repository, so the tracker is the only place to ask.
+        >
+        > Filing a question here means answering version fields that have nothing
+        > to do with the answer.
+
+        Thanks for taking the time to report this.
+
+        Most of what can go wrong in this package is a version problem. The code
+        is small, but the plotting helpers return ggplot objects and the scale
+        helpers return ggplot2 scale objects, so it sits on top of ggplot2 and
+        ggtree and both of them move underneath it. `view_palette()` once passed
+        the `size` aesthetic to `geom_tile()`, which ggplot2 3.4.0 deprecated,
+        and the warning users saw asked them to report the problem to the
+        authors. That is why this form asks about versions before it asks
+        anything else.
+
+  - type: input
+    id: version
+    attributes:
+      label: mycolorsTB version
+      description: Output of `as.character(utils::packageVersion("mycolorsTB"))`.
+      placeholder: 0.1.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How it was installed
+      description: >-
+        The GitHub version can be several fixes ahead of the one on CRAN, so this
+        decides whether what you are seeing is already fixed.
+      options:
+        - 'CRAN: install.packages("mycolorsTB")'
+        - 'GitHub: remotes::install_github("PathoGenOmics-Lab/mycolorsTB")'
+        - 'A local clone: R CMD INSTALL or devtools::install()'
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: ggplot2
+    attributes:
+      label: ggplot2 version
+      description: >-
+        Output of `as.character(utils::packageVersion("ggplot2"))`. This is not
+        background information: the package builds ggplot objects and hands them
+        back, so the ggplot2 version is part of the result. The package requires
+        3.4.0 or newer.
+      placeholder: 3.5.1
+    validations:
+      required: true
+
+  - type: input
+    id: ggtree
+    attributes:
+      label: ggtree version
+      description: >-
+        Output of `as.character(utils::packageVersion("ggtree"))`. Needed for
+        anything involving `plot_tb_tree()` or `plot_tb_cladogram()`, and worth
+        filling in anyway: ggtree comes from Bioconductor rather than CRAN, so its
+        version follows the Bioconductor release cycle, and two people on the same
+        R and the same ggplot2 can still be running different ggtree code. Leave
+        it empty if the report has nothing to do with trees.
+      placeholder: 3.14.0
+    validations:
+      required: false
+
+  - type: dropdown
+    id: export
+    attributes:
+      label: Which export is involved
+      description: >-
+        Pick as many as apply. Three of these (`mycolors`, `classicTB` and
+        `pathogenomics`) are colour vectors rather than functions.
+      multiple: true
+      options:
+        - mycolors
+        - classicTB
+        - pathogenomics
+        - scale_color_mycolors
+        - scale_fill_mycolors
+        - scale_color_classicTB
+        - scale_fill_classicTB
+        - view_palette
+        - tb_palette
+        - plot_tb_tree
+        - plot_tb_cladogram
+        - Installing or loading the package
+        - Not specific to one export
+    validations:
+      required: true
+
+  - type: textarea
+    id: reprex
+    attributes:
+      label: A minimal example that reproduces it
+      description: |
+        R code that a reader can paste into a fresh session, starting from
+        `library(mycolorsTB)` and building whatever data it needs, with no files
+        from your machine. Please cut it down to the smallest thing that still
+        shows the problem.
+
+        This is the field that decides whether the report can be acted on. A
+        screenshot of a wrong plot cannot be re-run, so it cannot be turned into
+        the check that keeps the problem from coming back, and it cannot show
+        whether a proposed fix worked. Small examples are usually enough:
+        `plot_tb_tree("")` used to return a plot whose axis range was computed by
+        `max()` over nothing, that is `-Inf`, and the whole reproducer was those
+        two characters.
+      render: r
+      placeholder: |
+        library(mycolorsTB)
+
+        view_palette("pathogenomics")
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: >-
+        Everything R printed, including any warnings that came before the error.
+        The warnings matter here more than usual: a deprecation notice from
+        ggplot2 is often the whole story.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-expected
+    attributes:
+      label: What you expected instead
+      description: >-
+        For a plot that is wrong rather than broken, say which part is wrong:
+        the colours, their order, the mapping from a name to a colour, the axis,
+        or the labels.
+    validations:
+      required: true
+
+  - type: textarea
+    id: session
+    attributes:
+      label: sessionInfo()
+      description: >-
+        Output of `sessionInfo()`, run in the same session where you reproduced
+        the problem. It carries the R version, the platform and the version of
+        every namespace that was actually loaded, which settles most arguments
+        about which dependency changed. It is optional only because the fields
+        above already cover the common case.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshot
+    attributes:
+      label: The plot itself, if it is wrong rather than broken
+      description: >-
+        Drag the image in. It is useful alongside the example above, not instead
+        of it: the image says what wrong looks like, the code is what gets run to
+        check the fix.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched the existing issues and did not find this one.
+          required: true
+        - label: I checked whether the development version on GitHub already fixes it.
+          required: false

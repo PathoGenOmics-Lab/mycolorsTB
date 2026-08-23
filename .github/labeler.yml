@@ -1,0 +1,97 @@
+# Which part of the package a pull request touches, worked out from the files it
+# changes. The labels exist so that "what changed in the palettes" is a question
+# the pull request list can answer; applying them by hand is how they stop being
+# applied.
+#
+# The labels these rules emit, so they can be created in Settings -> Labels with
+# a colour and a description chosen on purpose instead of whatever the first
+# automatic application leaves behind:
+#
+#   r              the package code itself
+#   documentation  the manual pages, the vignette, the README and the changelog
+#   packaging      what the built tarball is made of and what CRAN reads
+#   tests          the test suite
+#   ci             everything under .github
+#
+# The issue forms carry their own labels, so this file only has to cover pull
+# requests.
+#
+# Format is actions/labeler v5 and later, which is not v4's: a bare list of globs
+# under the label name silently matches nothing. The workflow pins @v7, and v6
+# and v7 changed only the Node runtime the action runs on, so this file is
+# unchanged from what v5 reads.
+
+# All of the package's code lives in two files, R/classicTB.R and R/globals.R,
+# but the glob is the directory rather than the two names, so splitting the file
+# up does not silently stop labelling it.
+r:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "R/**"
+
+# man/ is roxygen2 output, regenerated from the comments in R/, and NAMESPACE is
+# the same, filed under packaging below because it is what R reads at load time.
+# So a pull request that adds or renames an exported function normally arrives
+# carrying r, documentation and packaging together. That is correct rather than
+# noise: it is the shape a real change to this package has.
+#
+# The interesting case is the one where the labels do not arrive together. This
+# repository has already shipped man/plot_tb_tree.Rd and man/plot_tb_cladogram.Rd
+# with \dontrun{} while the roxygen comments they came from said \donttest{}: the
+# generated files had drifted from their source, and the next
+# devtools::document() would have flipped CRAN from skipping those examples to
+# running them, with nobody having asked for that. A pull request labelled r and
+# not documentation, or documentation and not r, is where that drift is visible
+# before it ships.
+documentation:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "man/**"
+          - "vignettes/**"
+          - "README.md"
+          - "NEWS.md"
+          # The README renders these from GitHub rather than from the tarball,
+          # which is why ^images$ is in .Rbuildignore. They are still what a
+          # reader sees first, so replacing one is a documentation change.
+          - "images/**"
+
+# What the built tarball is made of and what CRAN reads on submission. The
+# .Rbuildignore is here for the same reason as DESCRIPTION: it decides what ends
+# up inside the tarball, which is why R CMD check reported a non-standard
+# top-level directory for images/ and why the source package was carrying
+# several hundred kilobytes of PNGs that the README renders from GitHub anyway.
+# A change to that file changes what ships.
+#
+# cran-comments.md is listed before it exists, so the first submission note
+# arrives labelled instead of arriving bare.
+packaging:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "DESCRIPTION"
+          - "NAMESPACE"
+          - ".Rbuildignore"
+          - "MycolorTB.Rproj"
+          # DESCRIPTION says GPL-3 and the full text is build-ignored, so this
+          # file is a repository artefact rather than a shipped one. It still
+          # decides the terms the package is released under.
+          - "LICENSE.md"
+          - "cran-comments.md"
+
+# There is no tests/ directory yet. The rule is here so that the one that
+# introduces it arrives labelled, which matters more here than in a package that
+# already has a suite: every defect found in this package so far was found by a
+# person running it by hand, including plot_tb_tree("") building a plot whose
+# axis range came from max() over nothing, that is -Inf.
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - "tests/**"
+
+# Everything under .github, not a list of the files there. Naming them one by
+# one would leave `.github/labeler.yml` itself uncovered, so the pull request
+# adding a rule to this file would arrive with no label, which is a small thing
+# that says exactly how such a list would age.
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - ".github/**"

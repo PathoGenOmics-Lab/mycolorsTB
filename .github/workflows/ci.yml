@@ -1,0 +1,279 @@
+name: CI
+
+# The quality gate for mycolorsTB. Runs once on a pull request, and again on
+# main after the merge.
+#
+# This package has never had continuous integration, and every defect found in
+# it so far was found by a person running it by hand. view_palette() passed the
+# `size` aesthetic to geom_tile, deprecated since ggplot2 3.4.0, and shipped in
+# a release telling users to report the problem to the authors, because nothing
+# in the repository ever ran automatically. The calls were there all along: the
+# vignette evaluates view_palette() and so do its own examples. R CMD check
+# builds the vignette and runs the examples, so a first run would have said so.
+# That is what this file is for.
+#
+# `push` is restricted to main rather than firing on every branch. With both
+# triggers open, a commit on a branch with a pull request open runs the whole
+# matrix twice against the same commit: ten jobs where five answer the question,
+# and two notifications for one result. The cost is that a branch pushed without
+# a pull request is not checked, which is the right trade, since nothing reaches
+# main except through a pull request and the `pull_request` run is what reports
+# on that.
+#
+# `workflow_dispatch` buys back the part of that trade which actually hurts.
+# The matrix spans five platform and R version pairings, and the two most
+# likely to break, R devel and oldrel-1, break for reasons that have nothing to
+# do with the change under review. Being able to start the matrix on a branch
+# and watch it, before there is a pull request for a red X to attach itself to,
+# is worth one line here.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A second push to a pull request makes the first run's answer irrelevant, so
+# stop it rather than pay for it, and five matrix legs make that five runners
+# rather than one. Runs on main are left alone: those record whether a merged
+# commit is sound, and a cancelled one records nothing.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Both jobs read the repository, install dependencies and run checks. Neither
+# writes a comment, a label, a release or a commit: the roxygen job below
+# regenerates man/ and NAMESPACE on the runner and then throws the result away,
+# deliberately, rather than pushing it back. Without this block they would run
+# with whatever the repository default grants, which is more than that and grows
+# silently if the default is ever widened.
+permissions:
+  contents: read
+
+# ggtree, one of this package's Imports, comes from Bioconductor and not from
+# CRAN, so it is worth writing down how it is resolved here rather than leaving
+# the next person to work it out from a red run.
+#
+# setup-r-dependencies installs with pak, and pak brings the Bioconductor
+# repositories itself: `repo_get()` with no arguments returns CRAN plus
+# BioCsoft, BioCann, BioCexp, BioCworkflows and BioCbooks, and it selects the
+# Bioconductor branch matching the R version it is running under. So nothing
+# extra is needed for ggtree: no BiocManager step, and no `bioc-version` input,
+# which setup-r does not have in any case. Its nearest equivalent is
+# `extra-repositories`, which takes repository URLs.
+#
+# The consequence worth remembering is that the Bioconductor branch is a
+# function of the R version, so the matrix legs do not all get the same ggtree.
+# The `devel` leg resolves against Bioconductor devel and `oldrel-1` against an
+# older branch, and those two are where a missing or stale ggtree shows up
+# first.
+#
+# If a run does fail to find ggtree, check in this order. First, that
+# PKG_USE_BIOCONDUCTOR is not set to false anywhere, since that switch stops pak
+# contacting Bioconductor at all. Second, whether the failing leg is R devel,
+# which can run ahead of any Bioconductor branch pak knows how to map it to.
+# Only then reach for `extra-repositories:` on setup-r with an explicit
+# https://bioconductor.org/packages/<branch>/bioc URL, and treat that as a last
+# resort, because a pinned branch URL goes stale at the next Bioconductor
+# release and fails quietly by serving an old ggtree.
+#
+# One related caveat from the setup-r-dependencies documentation: system
+# dependencies of Bioconductor packages are often absent from the database pak
+# consults, so an apt package the ggtree tree needs may have to be installed by
+# hand here. Nothing in the current tree has needed that.
+
+jobs:
+  check:
+    name: R CMD check (${{ matrix.config.os }}, R ${{ matrix.config.r }})
+    runs-on: ${{ matrix.config.os }}
+
+    # The default is six hours. What matters is not how long a job takes but how
+    # long a stuck one takes to say so. There is no run history to take a number
+    # from, this being the first CI the package has had, so 45 is reasoned and
+    # not measured: the slow case is a cold pak cache on Linux building the
+    # ggtree dependency tree from source, and the limit sits far above what that
+    # should cost so a cold cache is not mistaken for a hang. Lower it once
+    # there are real runs to read.
+    timeout-minutes: 45
+
+    strategy:
+      # Without this, the first leg to go red kills the other four, and the
+      # question these five legs exist to answer is precisely which of them
+      # differ. A macOS failure that also happens on Windows is a package
+      # problem; one that happens only on macOS is a platform problem, and
+      # fail-fast hides the difference.
+      fail-fast: false
+      matrix:
+        config:
+          - { os: ubuntu-latest, r: 'release' }
+          # R devel catches deprecations and check changes before they reach a
+          # release, which is the whole point of running it. http-user-agent is
+          # set to 'release' because the public package manager keys its binary
+          # URLs off the user agent string and serves none for R devel, so
+          # without this the leg builds every dependency from source and turns
+          # the slowest platform into the slowest leg as well.
+          - { os: ubuntu-latest, r: 'devel', http-user-agent: 'release' }
+          # One release back. Users do not upgrade R the day it ships, and
+          # ggplot2 (>= 3.4.0) is the only version floor DESCRIPTION states, so
+          # this is the only thing that would notice code needing a newer R.
+          - { os: ubuntu-latest, r: 'oldrel-1' }
+          - { os: macos-latest, r: 'release' }
+          - { os: windows-latest, r: 'release' }
+
+    env:
+      # pak and remotes read GITHUB_PAT when they hit the GitHub API. Without a
+      # token they fall back to unauthenticated requests, which share one rate
+      # limit per runner IP and fail in bursts that look like network faults.
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      R_KEEP_PKG_SOURCE: yes
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # The vignette is R Markdown, and knitr hands the result to pandoc. Every
+      # leg builds it, so pandoc has to be present before setup-r, on Windows
+      # and macOS as much as on Linux.
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.config.r }}
+          http-user-agent: ${{ matrix.config.http-user-agent }}
+          # Binary packages from the public Posit package manager instead of
+          # source builds from CRAN. On Linux this is the difference between
+          # minutes and tens of minutes for the ggplot2 and ggtree trees.
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          # rcmdcheck needs the Suggests as well, since R CMD check runs the
+          # vignette and vignettes/use-mycolors.Rmd needs knitr and rmarkdown.
+          # `needs: check` is what pulls in Config/Needs/check should this
+          # package ever declare one.
+          needs: check
+
+      - uses: r-lib/actions/check-r-package@v2
+        with:
+          # There is no tests/ directory in this package yet, so no snapshots
+          # exist to upload. The input costs nothing today and means the failing
+          # snapshots are already attached to the run on the day testthat
+          # arrives, rather than being discovered missing while reading a red
+          # log.
+          upload-snapshots: true
+          # '"warning"' and not '"note"'. The action's default args are
+          # c("--no-manual", "--as-cran"), and --as-cran produces notes this
+          # repository has already had to answer for: it reported
+          # "Non-standard file/directory found at top level: images" while the
+          # source tarball carried roughly 490 KB of PNGs that the README
+          # renders from GitHub anyway. That note was worth reading and acting
+          # on, which is why ^images$ is now in .Rbuildignore, but it was not
+          # worth blocking a pull request, and notes also fire for things
+          # outside this package, such as a documented URL that starts
+          # redirecting.
+          error-on: '"warning"'
+
+      # The single thing most likely to make the first run of this workflow red
+      # is not a defect in this package. The action leaves build_args at
+      # "--no-manual", so R CMD build builds the vignette, and
+      # vignettes/use-mycolors.Rmd calls plot_tb_tree(), which goes through
+      # ggtree's geom_tiplab(align = TRUE). On a local machine with ggtree
+      # 3.14.0 against ggplot2 4.0.2 that pairing fails inside ggtree with
+      # `could not find function "is.waive"`. It reproduces with plain ggtree
+      # and mycolorsTB never loaded, so it is a version mismatch between two
+      # upstream packages and not something to fix here, and the current
+      # Bioconductor release of ggtree is 4.2.0.
+      #
+      # So: a green run means the leg resolved a pairing that works. A red one
+      # carrying that message means the leg resolved an old ggtree against a new
+      # ggplot2, and the response is to look at which ggtree version that leg
+      # installed, not to change plot_tb_tree(). The `oldrel-1` leg is the most
+      # exposed, since its Bioconductor branch is the oldest of the five.
+      #
+      # Where to look for it: the vignette is built by R CMD build, before the
+      # check phase starts, so this failure appears in the build step and not in
+      # the check log, `error-on:` above has no say in it, and every one of the
+      # five legs builds the vignette. It is a first-contact risk for the whole
+      # matrix, not a caveat about one leg.
+      #
+      # Worth knowing while reading such a failure: plot_tb_tree("") used to
+      # build a plot whose axis range came from max() over nothing, that is
+      # -Inf. An empty or unparseable tree does not necessarily fail loudly, so
+      # a vignette error is not always the first sign that tree handling is
+      # wrong.
+
+  document:
+    name: man/ and NAMESPACE match the roxygen comments
+    runs-on: ubuntu-latest
+
+    # Nothing here compiles. It installs roxygen2 plus this package's
+    # dependencies, regenerates the documentation and compares. 20 minutes is
+    # well clear of that and still far under the six hour default.
+    timeout-minutes: 20
+
+    # This job exists because of a real incident in this repository.
+    # man/plot_tb_tree.Rd and man/plot_tb_cladogram.Rd shipped \dontrun{} while
+    # the roxygen comments in R/classicTB.R said \donttest{}. The generated
+    # files had drifted from their source, so the next devtools::document()
+    # would silently have flipped CRAN from skipping those examples to running
+    # them. Nobody would have decided that, and nobody would have seen it in a
+    # diff either, because a regenerated .Rd looks like noise and gets scrolled
+    # past. Regenerating on a clean checkout and failing on any difference makes
+    # the drift the failure rather than the surprise.
+
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          # roxygen2 loads the package to read its namespace directives, so the
+          # Imports have to be installable here too, ggtree included. See the
+          # note above this jobs block on how pak finds it.
+          #
+          # The version is pinned to the RoxygenNote field in DESCRIPTION rather
+          # than left as `any::roxygen2`, which resolves to the current CRAN
+          # release. roxygenise() rewrites RoxygenNote to whichever version
+          # produced the files, so an unpinned job would report drift on its
+          # first run with nothing drifted, and a 7.x to 8.x regeneration would
+          # rewrite the .Rd files as well, which is a real change to what ships
+          # to CRAN and not something to discover from a red CI run. The two
+          # move together: to adopt a newer roxygen2, run document() locally,
+          # read the .Rd diff, commit man/, NAMESPACE and DESCRIPTION, and bump
+          # this pin in the same change.
+          extra-packages: any::roxygen2@7.3.2
+
+      - name: Regenerate the documentation
+        run: roxygen2::roxygenise()
+        shell: Rscript {0}
+
+      - name: The committed documentation matches what roxygen generates
+        # `git status --porcelain` rather than `git diff`, because roxygen2 can
+        # add an .Rd file for a newly documented function or delete one for a
+        # function that is gone, and an untracked or removed file is exactly the
+        # drift this is looking for. `git diff` alone would report neither.
+        #
+        # DESCRIPTION is included because roxygenise rewrites its RoxygenNote
+        # field, and the recorded roxygen version is part of what ships. Dropping
+        # DESCRIPTION from this list would let it go stale with nothing
+        # noticing. It does not cost false alarms here, because the roxygen2
+        # installed above is pinned to the same 7.3.2: a difference in
+        # DESCRIPTION means the documentation was generated somewhere else, not
+        # that CI reached for a newer roxygen2.
+        run: |
+          if [ -n "$(git status --porcelain -- man NAMESPACE DESCRIPTION)" ]; then
+            echo "man/, NAMESPACE or DESCRIPTION differ from what roxygen2 generates."
+            echo "Run devtools::document() and commit the result."
+            echo
+            git status --porcelain -- man NAMESPACE DESCRIPTION
+            echo
+            git diff -- man NAMESPACE DESCRIPTION
+            exit 1
+          fi
+          echo "Documentation is in sync with the roxygen comments."

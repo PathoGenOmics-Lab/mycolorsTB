@@ -1,0 +1,98 @@
+name: CodeQL
+
+# Static analysis over the only part of this repository CodeQL is able to read:
+# the workflows. The R package itself is NOT analysed here, and that is a limit
+# of the tool rather than something left half done.
+#
+# CodeQL ships extractors for C/C++, C#, Go, Java/Kotlin, JavaScript/TypeScript,
+# Python, Ruby, Rust, Swift and GitHub Actions. There is no R extractor, so for
+# R/classicTB.R and R/globals.R there is no query pack, no database and nothing
+# to upload. Adding `r` to the matrix below would not analyse the package, it
+# would fail the run on an unsupported language.
+#
+# One language is left, `actions`, so the fair question is whether one language
+# earns a workflow. It does, for two reasons that are both concrete facts about
+# this repository rather than general good practice:
+#
+#   * `pull_request_target`. That is the trigger .github/workflows/labeler.yml
+#     runs on, and it has to be, because labelling a pull request from a fork
+#     needs a write token and `pull_request` does not hand one out. The trade is
+#     that the job runs with the base branch's permissions while a fork controls
+#     the branch underneath it, so the safety of that workflow rests entirely on
+#     it never checking out or executing the pull request's code. These queries
+#     are what check that claim, and it is exactly the kind of claim worth
+#     having checked by something other than the person who wrote it.
+#
+#   * Script injection through untrusted context values. The workflow at
+#     .github/workflows/dependabot-auto-merge.yml reads Dependabot's metadata,
+#     the dependency group and the update type, and puts it into a shell step
+#     that decides whether a pull request may merge itself without a person
+#     looking. It reaches that step through `env:` instead of being expanded
+#     straight into `run:`, which is the whole reason it is safe. These queries
+#     are what will notice if a later edit stops doing that.
+#
+# What this file does not buy, said plainly so nobody reads a green check as
+# more than it is: it never looks at the palettes, the ggplot2 scale
+# constructors or the ggtree helpers, and it would not have found any defect
+# this package has actually shipped. Those were a deprecated `size` aesthetic on
+# geom_tile, generated .Rd files that had drifted away from the roxygen comments
+# they came from, and an axis range that plot_tb_tree("") took from max() over
+# nothing. None of them are a value arriving somewhere dangerous, which is the
+# only shape of problem these queries look for. R CMD check in ci.yml is what
+# covers that ground.
+#
+# On pushes to main and on pull requests, with no schedule. GitHub's own default
+# setup would add a weekly run; this deliberately does not, in keeping with
+# every other workflow here except the issue sweep, which has nothing but time
+# to hang off. A workflow changes when somebody edits a workflow, and that is
+# the moment this has something to say.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push makes an older analysis irrelevant, the same as CI.
+concurrency:
+  group: codeql-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  security-events: write
+  contents: read
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyse ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    # A ceiling for a runner that has hung, not an estimate. Reading the YAML in
+    # .github/ takes well under a minute.
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      # A matrix of one. Kept rather than flattened because it is what feeds the
+      # job name and the `category` below, and those strings are what GitHub
+      # keys the stored results on. Renaming them later to add a second language
+      # would orphan the existing alerts, so the shape is settled now while
+      # there is nothing to orphan.
+      matrix:
+        include:
+          - language: actions
+            # No compilation step exists for workflow YAML, so this is the only
+            # mode that applies.
+            build-mode: none
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Initialise CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+
+      - name: Analyse
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
