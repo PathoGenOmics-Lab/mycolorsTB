@@ -1,0 +1,131 @@
+name: Dependabot auto-merge
+
+# Merges Dependabot's routine updates once CI has passed, and never touches a
+# major one.
+#
+# The point of the split is that a minor or patch bump that survives every check
+# this repository runs on a pull request has already been examined more
+# carefully than a person would examine it by eye, while a major bump changes
+# what a step does and wants a person to look.
+#
+# The checks being waited on are the three workflows that run on every pull
+# request here, none of them filtered by path, so all three appear on all of
+# them:
+#
+#   CI                 the five R CMD check legs in .github/workflows/ci.yml,
+#                      plus the job in the same file that regenerates man/ and
+#                      NAMESPACE and fails on any difference.
+#   CodeQL             .github/workflows/codeql.yml, whose one language is
+#                      `actions`, so it reads the workflow files themselves.
+#   Dependency review  .github/workflows/dependency-review.yml.
+#
+# The documentation job is the half worth naming, because it is the half a human
+# reviewer skips. man/plot_tb_tree.Rd and man/plot_tb_cladogram.Rd shipped
+# \dontrun{} while the roxygen comments in R/classicTB.R said \donttest{}:
+# generated files that had drifted from the source they are generated from, so
+# the next devtools::document() would silently have flipped CRAN from skipping
+# those examples to running them. Nothing in a diff of an action version bump
+# looks like that, which is exactly why the check has to run on every pull
+# request rather than being trusted to a reading.
+#
+# Only one ecosystem actually reaches this workflow. Dependabot has no CRAN and
+# no Bioconductor updater, so ggplot2, ape and ggtree are not its business here:
+# what arrives is GitHub Actions version bumps, which is also the class where an
+# unattended merge is cheapest to be wrong about, since CI and CodeQL both run
+# on the very workflow files being changed.
+#
+# The waiting is GitHub's, through `gh pr merge --auto`, and that rests on two
+# repository settings rather than on anything this file can assert. Both are on
+# and both are load-bearing:
+#
+#   Settings -> General -> Allow auto-merge. Off, the `--auto` call exits
+#   non-zero and this job turns red on every routine pull request.
+#
+#   A branch protection rule on main marking those three checks required. That
+#   is what `--auto` waits for. Without a required check there is nothing to
+#   wait on and the merge happens on the spot, which is the single outcome this
+#   file exists to prevent. A green tick that was never required is not a gate.
+#
+# So if the protection rule on main is ever removed, this workflow silently
+# turns into "merge every routine Dependabot pull request immediately". That is
+# the failure worth knowing about, because nothing here goes red when it
+# happens.
+#
+# Triggered by the pull request itself, not by a schedule.
+
+on: pull_request
+
+permissions:
+  contents: write # the merge itself
+  pull-requests: write # merging and commenting on the pull request
+
+jobs:
+  auto-merge:
+    name: Merge routine updates once CI is green
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    steps:
+      - name: Read what this pull request updates
+        id: metadata
+        uses: dependabot/fetch-metadata@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # The rule, decided once.
+      #
+      # Writing it twice, once negated for the step that explains itself, is the
+      # version that rots: the two halves drift the moment the first is edited,
+      # and then a grouped patch matches the merge step and the "left alone"
+      # step at the same time, so it merges and announces that it did not. One
+      # step decides, the others read the answer.
+      #
+      # Named rather than excluded: merge when the pull request says in so many
+      # words that it is a patch or a minor, or when it is a `-routine` group,
+      # which the configuration already restricts to those two.
+      #
+      # Asking instead whether the update was "not major" is the trap, and it is
+      # a trap that fails open. Not every update reports an update type at all,
+      # and an empty string is not equal to major, so the negated rule says yes
+      # to whatever it could not read. Positive matching means anything this
+      # cannot identify still waits for a person, which is the direction an
+      # unattended gate should fail in.
+      #
+      # A grouped pull request reports "the highest semver change being made by
+      # this PR", so a group carrying one major is a major here. That is what
+      # lets a group in dependabot.yml hold patches and majors alike without a
+      # major slipping through on the back of a patch.
+      - name: Decide whether this one may merge itself
+        id: decide
+        env:
+          GROUP: ${{ steps.metadata.outputs.dependency-group }}
+          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
+        run: |
+          set -euo pipefail
+          may_merge=false
+          case "$GROUP" in
+            *-routine) may_merge=true ;;
+          esac
+          case "$UPDATE_TYPE" in
+            version-update:semver-patch|version-update:semver-minor) may_merge=true ;;
+          esac
+          # Printed because a decision nobody can read is a decision nobody can
+          # correct: this line is what a later surprise gets diagnosed from.
+          echo "group='${GROUP}' update-type='${UPDATE_TYPE}' -> may-merge=${may_merge}"
+          echo "may-merge=${may_merge}" >> "$GITHUB_OUTPUT"
+
+      - name: Queue the merge
+        if: steps.decide.outputs.may-merge == 'true'
+        run: gh pr merge --auto --merge "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Say why this one was left alone
+        if: steps.decide.outputs.may-merge != 'true'
+        run: |
+          gh pr comment "$PR_URL" --body \
+            "Left for review. Only a \`-routine\` group, or an update that identifies itself as patch or minor, merges on its own once CI passes. This one is a major update or does not say which it is."
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

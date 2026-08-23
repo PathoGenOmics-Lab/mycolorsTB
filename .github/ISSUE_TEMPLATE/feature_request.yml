@@ -1,0 +1,109 @@
+name: Feature request
+description: A palette, a scale helper or a plotting helper the package should have
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!TIP]
+        > If you are not sure whether the package already does this, check the
+        > reference manual on CRAN first. It is a shorter path to an answer than a
+        > feature request for something that turns out to exist. Eleven objects
+        > are exported: the palettes `mycolors`, `classicTB` and `pathogenomics`,
+        > the four `scale_color_*` and `scale_fill_*` helpers, `view_palette()`,
+        > `tb_palette()`, `plot_tb_tree()` and `plot_tb_cladogram()`.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of addition is this
+      options:
+        - A new palette
+        - A new scale helper
+        - A new plotting helper
+        - A change to something that already exists
+        - Documentation, examples or the vignette
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do
+      description: >-
+        The figure you are trying to make, and where the package stops being able
+        to help. Describing the problem rather than the solution usually leads
+        somewhere better, and it is the part nobody else can supply.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like it to do
+      description: >-
+        A function name and its arguments, a list of hex codes, a sketch. Rough
+        is fine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: meaning
+    attributes:
+      label: What the colours are for
+      description: |
+        For a new palette, what each colour stands for. This is the question that
+        decides whether a palette belongs in the package at all. `mycolors` is not
+        fourteen pleasant colours, it is a fixed mapping from MTBC lineage names
+        (A1 to A4, L1 to L10) to hex codes, so that a lineage is the same colour in
+        every figure that uses it. A set of colours with no meaning attached is a
+        personal theme, and it is better kept in the project that needs it.
+
+        If you already have the hex codes, list them.
+      placeholder: |
+        Drug resistance status: susceptible, MDR, pre-XDR, XDR
+    validations:
+      required: false
+
+  - type: textarea
+    id: existing
+    attributes:
+      label: Which existing palette you ruled out, and why
+      description: >-
+        The three palettes hold fourteen, fourteen and eight colours, and
+        `tb_palette(n, palette_name)` interpolates when you ask for more than the
+        palette holds. Say what you tried and what was wrong with the result: the
+        wrong number of colours, the wrong meaning, a clash with a figure you
+        publish alongside it, or a colour too close to a lineage colour that
+        already means something else.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: accessibility
+    attributes:
+      label: Colour vision accessibility
+      description: >-
+        Asked because the entire output of this package is colour. Roughly one man
+        in twelve has some form of red-green colour vision deficiency, and the
+        existing palettes already place red (`#ff0000`, L4) near green (`#1eb040`,
+        L6), so a new palette is a chance to do better rather than to repeat that.
+        Greyscale printing is worth a thought too.
+      options:
+        - Checked in a simulator, and the colours stay distinguishable
+        - Taken from a source that documents its accessibility
+        - Not checked
+        - Not applicable, this is not a palette
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What you do instead today
+      description: >-
+        A vector of hex codes pasted into your own scripts, another palette
+        package, `scale_fill_manual()` by hand. A workaround that already works is
+        often the shape the feature should take, and one that does not says what
+        the gap costs.

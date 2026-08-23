@@ -4,11 +4,22 @@
 \alias{scale_color_classicTB}
 \title{Scale Color for ggplot2 Using classicTB Palette}
 \usage{
-scale_color_classicTB()
+scale_color_classicTB(...)
+}
+\arguments{
+\item{...}{Additional arguments passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_colour_manual()}},
+such as \code{name}, \code{labels} or \code{na.value}.}
 }
 \value{
 A ggplot2 scale object.
 }
 \description{
 Applies the \code{classicTB} palette to the color aesthetic in a ggplot.
+}
+\examples{
+library(ggplot2)
+df <- data.frame(x = letters[1:5], y = 1, group = letters[1:5])
+ggplot(df, aes(x, y, color = group)) +
+  geom_point(size = 4) +
+  scale_color_classicTB()
 }

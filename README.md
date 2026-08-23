@@ -1,7 +1,10 @@
 # mycolorsTB 
 
 <p align="center">
-  <img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolors.png" title="mycolors logo" style="width:650px; height: auto;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolors_dark.png">
+    <img alt="mycolorsTB logo: a hand-drawn radial tree of the Mycobacterium tuberculosis complex with its branches coloured by lineage, beside the hand-lettered mycolorsTB name and drawn tuberculosis bacilli" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolors.png" title="mycolors logo" width="650" style="max-width: 100%;">
+  </picture>
 </p>
 
 ### R Color Package for _Mycobacterium tuberculosis_ complex
@@ -76,7 +79,7 @@ show(mycolorsTB::classicTB)
 ```
 
 <p align="center">
-<img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/mycolores.png" title="mycolors palette" style="width:1000px; height: auto;">
+<img alt="The 14 mycolorsTB colours as a two-row grid of swatches, each labelled with its hex code and its colour name, from Gold (metallic) through Cambridge blue" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolores.png" title="mycolors palette" width="1000">
 </p>
 
 ### Example with `ggplot2`
@@ -86,7 +89,9 @@ Use `scale_fill_mycolors()` or `scale_color_mycolors()` to easily apply the pale
 ```r
 library(ggplot2)
 
-# Example data
+# Example data. The seed is fixed so this snippet uses the same data as the
+# figure below, which is rendered by .github/scripts/make_example_plots.R.
+set.seed(42)
 data <- data.frame(
   x = 1:14,
   y = rnorm(14),
@@ -101,7 +106,10 @@ ggplot(data, aes(x = x, y = y, fill = group)) +
 ```
 
 <p align="center">
-<img src="https://github.com/PathoGenOmics-Lab/mycolorsTB/blob/main/images/example1.png" title="mycolors palette" style="width:1000px; height: auto;">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/example1_dark.png">
+    <img alt="Bar chart of the example data with one bar per lineage, each bar filled with its mycolorsTB colour, and a legend on the right naming all 14 lineages" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/example1.png" title="mycolors palette" width="1000" style="max-width: 100%;">
+  </picture>
 </p>
 
 ---

@@ -1,7 +1,7 @@
 Package: mycolorsTB
 Type: Package
 Title: Color Palettes for Mycobacterium Tuberculosis Data Visualization
-Version: 0.1.1
+Version: 0.1.2
 Authors@R:
     person(given = "Paula",
            family = "Ruiz-Rodriguez",
@@ -15,16 +15,19 @@ Description: Colour palettes and helper functions for visualising
     palettes were developed as part of the 'mycolorsTB' project
     <https://github.com/PathoGenOmics-Lab/mycolorsTB>.
 License: GPL-3
+URL: https://github.com/PathoGenOmics-Lab/mycolorsTB
+BugReports: https://github.com/PathoGenOmics-Lab/mycolorsTB/issues
 Encoding: UTF-8
 LazyData: true
 Imports:
-    ggplot2,
+    ggplot2 (>= 3.4.0),
     ape,
-    ggtree
+    ggtree,
+    grDevices
 Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
 Roxygen: list(markdown = TRUE,
            roclets = c("rd", "namespace", "collate"))
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2

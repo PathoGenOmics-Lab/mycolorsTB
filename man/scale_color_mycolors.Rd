@@ -4,11 +4,22 @@
 \alias{scale_color_mycolors}
 \title{Scale Color for ggplot2 Using mycolors Palette}
 \usage{
-scale_color_mycolors()
+scale_color_mycolors(...)
+}
+\arguments{
+\item{...}{Additional arguments passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_colour_manual()}},
+such as \code{name}, \code{labels} or \code{na.value}.}
 }
 \value{
 A ggplot2 scale object.
 }
 \description{
 Applies the \code{mycolors} palette to the color aesthetic in a ggplot.
+}
+\examples{
+library(ggplot2)
+df <- data.frame(x = names(mycolors), y = 1, lineage = names(mycolors))
+ggplot(df, aes(x, y, color = lineage)) +
+  geom_point(size = 4) +
+  scale_color_mycolors(name = "Lineage")
 }

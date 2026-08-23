@@ -4,11 +4,22 @@
 \alias{scale_fill_mycolors}
 \title{Scale Fill for ggplot2 Using mycolors Palette}
 \usage{
-scale_fill_mycolors()
+scale_fill_mycolors(...)
+}
+\arguments{
+\item{...}{Additional arguments passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_fill_manual()}},
+such as \code{name}, \code{labels} or \code{na.value}.}
 }
 \value{
 A ggplot2 scale object.
 }
 \description{
 Applies the \code{mycolors} palette to the fill aesthetic in a ggplot.
+}
+\examples{
+library(ggplot2)
+df <- data.frame(x = names(mycolors), y = 1, lineage = names(mycolors))
+ggplot(df, aes(x, y, fill = lineage)) +
+  geom_col() +
+  scale_fill_mycolors(name = "Lineage")
 }
