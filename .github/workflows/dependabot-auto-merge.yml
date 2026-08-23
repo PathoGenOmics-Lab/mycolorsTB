@@ -6,11 +6,11 @@ name: Dependabot auto-merge
 # The point of the split is that a minor or patch bump that survives every check
 # this repository runs on a pull request has already been examined more
 # carefully than a person would examine it by eye, while a major bump changes
-# APIs and wants a person to look.
+# what a step does and wants a person to look.
 #
 # The checks being waited on are the three workflows that run on every pull
-# request here, with nothing filtered by path, so all three are expected to
-# appear on all of them:
+# request here, none of them filtered by path, so all three appear on all of
+# them:
 #
 #   CI                 the five R CMD check legs in .github/workflows/ci.yml,
 #                      plus the job in the same file that regenerates man/ and
@@ -34,20 +34,22 @@ name: Dependabot auto-merge
 # unattended merge is cheapest to be wrong about, since CI and CodeQL both run
 # on the very workflow files being changed.
 #
-# This job waits for CI itself instead of handing the waiting to GitHub, which
-# is the one real difference from how this is usually written. `gh pr merge
-# --auto` parks a merge until the required checks pass, and it needs two
-# repository settings to mean anything: auto-merge has to be allowed, and a
-# branch protection rule has to mark some check required. Neither is set here.
-# Settings -> General -> Allow auto-merge is off, so the `--auto` call would
-# exit non-zero and turn this job red on every routine pull request, and main
-# carries no protection rule, so even with auto-merge switched on there would be
-# no required check for `--auto` to wait for and it would merge on the spot,
-# which is the single outcome this file exists to prevent. Both are repository
-# settings rather than anything a file in the repository can assert, so the
-# waiting happens below, in the open, where the gate is written down and can be
-# read. If the two settings are ever turned on, this still works and still waits
-# for the checks it names.
+# The waiting is GitHub's, through `gh pr merge --auto`, and that rests on two
+# repository settings rather than on anything this file can assert. Both are on
+# and both are load-bearing:
+#
+#   Settings -> General -> Allow auto-merge. Off, the `--auto` call exits
+#   non-zero and this job turns red on every routine pull request.
+#
+#   A branch protection rule on main marking those three checks required. That
+#   is what `--auto` waits for. Without a required check there is nothing to
+#   wait on and the merge happens on the spot, which is the single outcome this
+#   file exists to prevent. A green tick that was never required is not a gate.
+#
+# So if the protection rule on main is ever removed, this workflow silently
+# turns into "merge every routine Dependabot pull request immediately". That is
+# the failure worth knowing about, because nothing here goes red when it
+# happens.
 #
 # Triggered by the pull request itself, not by a schedule.
 
@@ -56,27 +58,12 @@ on: pull_request
 permissions:
   contents: write # the merge itself
   pull-requests: write # merging and commenting on the pull request
-  # Only the check runs are read below, but the rollup that carries them is a
-  # mixed list of check runs and commit statuses, so it asks for both.
-  checks: read
-  statuses: read
-
-# One waiter per pull request. Dependabot force-pushes when it rebases, and each
-# push starts this workflow again; without this, the run watching the commit
-# that no longer exists would sit here polling until its own timeout.
-concurrency:
-  group: dependabot-auto-merge-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
 
 jobs:
   auto-merge:
     name: Merge routine updates once CI is green
     runs-on: ubuntu-latest
-    # Long because the job spends nearly all of it asleep, waiting on a matrix
-    # of five R CMD check legs whose own limit is 45 minutes. The poll below
-    # gives up at 40, so a run that runs out of patience ends by saying so on
-    # the pull request rather than by being killed halfway through.
-    timeout-minutes: 50
+    timeout-minutes: 10
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Read what this pull request updates
@@ -127,137 +114,18 @@ jobs:
           echo "group='${GROUP}' update-type='${UPDATE_TYPE}' -> may-merge=${may_merge}"
           echo "may-merge=${may_merge}" >> "$GITHUB_OUTPUT"
 
-      # Matched on the workflow name rather than the job name, which matters
-      # here for two reasons. The R CMD check job publishes one check run per
-      # matrix leg, named after the operating system and R version it ran, so
-      # there is no one job name to wait for and adding a sixth leg must not
-      # need an edit in this file. And the documentation job is published under
-      # a sentence, `man/ and NAMESPACE match the roxygen comments`, which is
-      # the kind of name someone reasonably rewords; wording it differently in
-      # ci.yml should not quietly unhook this gate.
-      #
-      # An absent workflow is read as "not yet", not as satisfied. That is the
-      # opposite of how this is often written, and it is right here because none
-      # of the three workflows is filtered by path: every one of them runs on
-      # every pull request, so a missing one has not registered yet rather than
-      # having decided it had nothing to do. It also means the gate fails closed
-      # if a workflow is renamed or deleted, which is the safe direction.
-      #
-      # This workflow's own job appears in the same rollup, permanently in
-      # progress while it reads it, so the three are named rather than the list
-      # simply being required to be green: waiting on everything would be
-      # waiting on itself.
-      - name: Wait for the checks to answer
-        id: gate
+      - name: Queue the merge
         if: steps.decide.outputs.may-merge == 'true'
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          rollup="$(mktemp)"
-
-          # missing, pending, success or failure, for every check run belonging
-          # to one named workflow. Statuses and conclusions are compared
-          # upper-cased because the enum is what the API returns and the casing
-          # is not something to bet a merge on. A check the runner skipped
-          # counts as satisfied: a skip is the workflow saying this commit did
-          # not need it.
-          state_of() {
-            jq -r --arg workflow "$1" '
-              [ (.statusCheckRollup // [])[]
-                | select(.__typename == "CheckRun")
-                | select((.workflowName // "") == $workflow)
-                | { status:     (.status     // "" | ascii_upcase),
-                    conclusion: (.conclusion // "" | ascii_upcase) } ]
-              | if   length == 0                 then "missing"
-                elif any(.status != "COMPLETED") then "pending"
-                elif all(.conclusion == "SUCCESS" or .conclusion == "SKIPPED" or .conclusion == "NEUTRAL")
-                                                 then "success"
-                else                                  "failure"
-                end
-            ' "$rollup"
-          }
-
-          deadline=$(( $(date +%s) + 40 * 60 ))
-          read_once=false
-
-          while :; do
-            # A transient API error should cost one poll, not the merge. With
-            # `set -e` an unguarded call here would end the job in a way that
-            # skips the steps below, so the pull request would be left with no
-            # merge and no comment saying why.
-            if ! gh pr view "$PR_URL" --json statusCheckRollup > "$rollup"; then
-              echo "could not read the checks this time, trying again"
-            else
-              read_once=true
-              # `|| echo unreadable` rather than a bare substitution: a jq that
-              # trips over an unexpected payload must cost one poll, like the
-              # API error above, not the whole job. `unreadable` is neither a
-              # failure nor a success, so it keeps the loop waiting.
-              ci="$(state_of 'CI' || echo unreadable)"
-              codeql="$(state_of 'CodeQL' || echo unreadable)"
-              review="$(state_of 'Dependency review' || echo unreadable)"
-              echo "CI=${ci} CodeQL=${codeql} Dependency-review=${review}"
-
-              if [ "$ci" = failure ] || [ "$codeql" = failure ] || [ "$review" = failure ]; then
-                echo "green=false" >> "$GITHUB_OUTPUT"
-                echo "reason=a check failed" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-
-              if [ "$ci" = success ] && [ "$codeql" = success ] && [ "$review" = success ]; then
-                echo "green=true" >> "$GITHUB_OUTPUT"
-                exit 0
-              fi
-            fi
-
-            # Two different givings-up, told apart because they want different
-            # things done about them: checks that ran long, and checks that were
-            # never read at all.
-            if [ "$(date +%s)" -ge "$deadline" ]; then
-              echo "green=false" >> "$GITHUB_OUTPUT"
-              if [ "$read_once" = true ]; then
-                echo "reason=the checks had not all finished after 40 minutes" >> "$GITHUB_OUTPUT"
-              else
-                echo "reason=the checks could not be read for 40 minutes" >> "$GITHUB_OUTPUT"
-              fi
-              exit 0
-            fi
-
-            sleep 30
-          done
-
-      # A plain merge, not `--auto`: the waiting already happened above, and
-      # asking GitHub to wait as well would either be refused outright, because
-      # auto-merge is switched off for this repository, or be no wait at all,
-      # because main has no required check to wait for.
-      - name: Merge it
-        if: steps.decide.outputs.may-merge == 'true' && steps.gate.outputs.green == 'true'
-        run: gh pr merge --merge "$PR_URL"
+        run: gh pr merge --auto --merge "$PR_URL"
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Say why this one was left alone
-        if: always() && steps.decide.outputs.may-merge != 'true'
+        if: steps.decide.outputs.may-merge != 'true'
         run: |
           gh pr comment "$PR_URL" --body \
             "Left for review. Only a \`-routine\` group, or an update that identifies itself as patch or minor, merges on its own once CI passes. This one is a major update or does not say which it is."
         env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Said out loud, because the failure mode of a silent gate is a pull
-      # request that looks abandoned. The wording comes from the step that did
-      # the waiting, so this cannot report a reason that step did not reach.
-      - name: Say why the merge did not happen
-        if: always() && steps.decide.outputs.may-merge == 'true' && steps.gate.outputs.green != 'true'
-        run: |
-          gh pr comment "$PR_URL" --body \
-            "Not merged: ${REASON:-the checks could not be read}. This one qualifies on its update type, so it will merge itself if the checks go green: push a fix, or re-run this workflow from the Actions tab once CI is passing."
-        env:
-          REASON: ${{ steps.gate.outputs.reason }}
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
