@@ -3,7 +3,7 @@
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolors_dark.png">
-    <img alt="mycolorsTB logo: a hand-drawn radial tree of the Mycobacterium tuberculosis complex with its branches coloured by lineage, beside the hand-lettered mycolorsTB name and drawn tuberculosis bacilli" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolors.png" title="mycolors logo" width="650">
+    <img alt="mycolorsTB logo: a hand-drawn radial tree of the Mycobacterium tuberculosis complex with its branches coloured by lineage, beside the hand-lettered mycolorsTB name and drawn tuberculosis bacilli" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/mycolors.png" title="mycolors logo" width="650" style="max-width: 100%;">
   </picture>
 </p>
 
@@ -108,7 +108,7 @@ ggplot(data, aes(x = x, y = y, fill = group)) +
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/example1_dark.png">
-    <img alt="Bar chart of the example data with one bar per lineage, each bar filled with its mycolorsTB colour, and a legend on the right naming all 14 lineages" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/example1.png" title="mycolors palette" width="1000">
+    <img alt="Bar chart of the example data with one bar per lineage, each bar filled with its mycolorsTB colour, and a legend on the right naming all 14 lineages" src="https://raw.githubusercontent.com/PathoGenOmics-Lab/mycolorsTB/main/images/example1.png" title="mycolors palette" width="1000" style="max-width: 100%;">
   </picture>
 </p>
 
