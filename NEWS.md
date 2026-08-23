@@ -44,6 +44,20 @@
   490 KB from the source tarball. The README keeps rendering the images from
   GitHub.
 
+* The README figures have dark-theme variants, served through a `<picture>`
+  element, so the ink of the logo and the axis and legend text of the example
+  chart stay legible on GitHub's dark canvases. The light files keep their
+  current names, so every existing link to them still resolves.
+
+* The example chart is generated from a fixed seed, and the README snippet now
+  carries the same `set.seed()` call, so the data behind the figure is
+  reproducible. `images/example1.png` therefore shows different data than it
+  did in 0.1.1. The committed render comes from
+  `.github/scripts/make_example_plots.R`, which draws the same seeded data as
+  the snippet and adds a transparent background and tightened legend keys so
+  that all 14 entries and the legend title fit in the figure. Both README
+  figures are rebuilt by the scripts in `.github/scripts/`.
+
 # mycolorsTB 0.1.1
 
 * First CRAN release.
