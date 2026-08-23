@@ -1,0 +1,210 @@
+site_name: mycolorsTB
+site_description: >-
+  Colour palettes for Mycobacterium tuberculosis lineages, with ggplot2 scales
+  and ggtree tree helpers. An R package.
+site_author: Paula Ruiz-Rodriguez
+site_url: https://pathogenomics-lab.github.io/mycolorsTB/
+
+repo_url: https://github.com/PathoGenOmics-Lab/mycolorsTB
+repo_name: PathoGenOmics-Lab/mycolorsTB
+edit_uri: edit/main/docs/
+# The view action points at the file itself; the edit action opens it for editing.
+copyright: >-
+  Copyright &copy; Paula Ruiz-Rodriguez, PathoGenOmics Lab,
+  I&sup2;SysBio, University of Valencia-CSIC
+
+theme:
+  name: material
+  # Not images/mycolors.png itself. That file is a 2781 x 2093 composition: a
+  # radial tree, the word "mycolors", the letters "TB" and four drawn bacilli.
+  # Material draws the logo about 39 px wide, where the lettering lands on under
+  # 4 px of height and comes out as grey mush next to a masthead that already
+  # sets the name in type. The tree survives the reduction, because it is 14
+  # saturated colours in a fan and no part of it depends on reading a letter, so
+  # the mark here is the tree cut out of that file by
+  # .github/scripts/make_docs_emblem.py. That script also lifts the tree's black
+  # central fork to a grey that holds on both mastheads, since this theme has one
+  # logo slot and two schemes: #ffffff behind it in light, #14151a in dark, both
+  # measured off the built site rather than taken from the palette's names.
+  logo: assets/emblem.png
+  # The same cut, squared and rendered at 16, 32 and 48 px, one entry per size
+  # rather than one image for a browser to shrink. At 16 px the tree stops being
+  # a tree and becomes a colour signature, red low left, blue high left, green
+  # high right, which is what a tab icon is read as anyway.
+  favicon: assets/favicon.ico
+  # English only, deliberately. There is no mkdocs-static-i18n here, no .es.md
+  # files and no language switcher, so nothing on this site is half translated.
+  # The structure is the one that plugin expects all the same: every page is a
+  # plain .md under docs/ with no locale in its name, which is the `suffix`
+  # layout's default locale. Adding Spanish later is turning the plugin on in
+  # `plugins:` below, adding docs/<page>.es.md beside each page, and translating
+  # the nav titles. No page has to move and no link has to change.
+  language: en
+  font:
+    text: IBM Plex Sans
+    code: IBM Plex Mono
+  icon:
+    repo: fontawesome/brands/github
+  features:
+    # Eight pages, no groups: the nav below is flat, so this changes nothing
+    # today. It is what decides the behaviour on the day a group appears, and
+    # the choice it locks in is that a group renders as an always-open section
+    # rather than as a collapsible one.
+    - navigation.sections
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    # Nothing renders from this today, for the same reason as the line above:
+    # Material only draws the breadcrumb when a page has more than one ancestor,
+    # and on a flat nav every page has none. It is here so that the day a section
+    # appears above these pages, a reader arriving from search gets a path
+    # telling them where they landed instead of nothing.
+    - navigation.path
+    # `navigation.instant` is deliberately not enabled. The reason that decides
+    # it is the i18n plugin, which this site is laid out to accept later: it
+    # warns that instant loading breaks the language switcher's contextual link,
+    # so switching to Spanish from the reference page would land on the Spanish
+    # home page. Turning it on now would be a nicety to undo the day Spanish
+    # arrives. There is little on the other side of the trade. Instant loading
+    # does not fetch fewer bytes: a navigation requests the same HTML document
+    # either way, and the theme's stylesheet and script are in the browser cache
+    # from the first page on. What it saves is parsing and initialising them
+    # again, on eight pages that average about 50 kB of HTML each.
+    - search.suggest
+    - search.highlight
+    - search.share
+    - content.code.copy
+    # Numbered notes anchored inside a code block, so a call can be explained
+    # argument by argument without writing it out twice.
+    - content.code.annotate
+    - content.code.select
+    # Abbreviations and links get a real tooltip instead of the browser's.
+    - content.tooltips
+    - content.action.edit
+    - content.action.view
+    - toc.follow
+  # Three states rather than two: the site follows the reader's system setting
+  # until they choose otherwise, and their choice is remembered.
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/brightness-auto
+        name: Follow the system setting
+
+plugins:
+  - search
+  # No i18n plugin. See the note on `language:` above for what turning it on
+  # would take. One consequence worth writing down while it is absent: the
+  # search index is built for a single language, so there is no extra_javascript
+  # here keeping results in the language of the page being read.
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      # anchor_linenums is deliberately off: no block on this site asks for line
+      # numbers, and it still emitted an empty anchor with an href in front of
+      # every line of code. Those sit in the tab order with no accessible name
+      # and nothing to see when focused.
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      # docs/changelog.md pulls the release notes in from the repository root
+      # with `--8<-- "NEWS.md"`, so there is one list of changes and CRAN and
+      # this site read the same file. base_path is stated rather than left at
+      # its default, which is the same `.`, to say out loud that the path is
+      # resolved from where mkdocs runs and not from docs/.
+      #
+      # check_paths is the part that matters. Left off, a snippet that cannot be
+      # found expands to nothing and the build stays green: the changelog would
+      # publish as a preamble with no releases under it, and `--strict` would not
+      # say a word, because an include that resolved to nothing is not a broken
+      # link. Renaming NEWS.md should break this build, loudly.
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  # This block is kept whole rather than trimmed to what the eight pages use
+  # today. An extension that is enabled and unused costs one line here; one that
+  # is missing costs a page rendering its own markup as literal punctuation, and
+  # `--strict` does not catch that, because an unparsed `==` is valid text.
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+extra_css:
+  - assets/extra.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/PathoGenOmics-Lab/mycolorsTB
+      name: mycolorsTB on GitHub
+    # The released package, which is not what this site documents by default:
+    # CRAN carries 0.1.1 while main carries 0.1.2. The changelog says which is
+    # which; this link is here so a reader can check what install.packages()
+    # would actually give them.
+    - icon: fontawesome/brands/r-project
+      link: https://cran.r-project.org/package=mycolorsTB
+      name: mycolorsTB on CRAN
+    # In the footer of every page, because the moment someone needs to report
+    # something is whichever page they were reading when it stopped answering
+    # them.
+    - icon: material/bug-outline
+      link: https://github.com/PathoGenOmics-Lab/mycolorsTB/issues
+      name: Report an issue
+
+# Under `mkdocs build --strict`, which is what CI runs, these turn a link to a
+# page or a heading that does not exist into a failure. Renaming a section is
+# then caught here instead of by a reader hitting a dead anchor.
+validation:
+  links:
+    not_found: warn
+    anchors: warn
+    unrecognized_links: warn
+
+# Flat, and in the order a reader meets the package: what it is, how to install
+# and load it, what the colours are, how to put them on a plot, how to put them
+# on a tree, then the per function detail, then the two pages you only open when
+# something is wrong or has changed. Every entry title matches the page's own H1,
+# so the sidebar and the page agree, with one exception: Home is headed with the
+# package name, because it is the landing page and a reader arriving from CRAN or
+# from the README should see what the package is called first.
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Palettes: palettes.md
+  - Using with ggplot2: ggplot2.md
+  - Trees: trees.md
+  - Reference: reference.md
+  - Troubleshooting: troubleshooting.md
+  - Changelog: changelog.md

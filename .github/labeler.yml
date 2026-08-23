@@ -8,7 +8,8 @@
 # automatic application leaves behind:
 #
 #   r              the package code itself
-#   documentation  the manual pages, the vignette, the README and the changelog
+#   documentation  the manual pages, the vignette, the README, the changelog
+#                  and the MkDocs site
 #   packaging      what the built tarball is made of and what CRAN reads
 #   tests          the test suite
 #   ci             everything under .github
@@ -54,6 +55,22 @@ documentation:
           # which is why ^images$ is in .Rbuildignore. They are still what a
           # reader sees first, so replacing one is a documentation change.
           - "images/**"
+          # The MkDocs site, published at
+          # https://pathogenomics-lab.github.io/mycolorsTB/ and named in
+          # DESCRIPTION's URL field. It is build-ignored for the same reason
+          # images/ is: R CMD check --as-cran reports a top-level docs/ and
+          # mkdocs.yml as non-standard files found at top level, so both lines
+          # sit next to ^images$ in .Rbuildignore and neither ships in the
+          # tarball. What a reader is sent to is still documentation.
+          #
+          # Both globs are on the path list .github/workflows/docs.yml
+          # triggers on, but that list is the wider one: it watches R/,
+          # NAMESPACE and DESCRIPTION as well, because docs/reference.md is
+          # hand-written and a renamed argument makes it wrong without touching
+          # anything under docs/. A pull request can be labelled r alone and
+          # still be the one that republishes the site.
+          - "docs/**"
+          - "mkdocs.yml"
 
 # What the built tarball is made of and what CRAN reads on submission. The
 # .Rbuildignore is here for the same reason as DESCRIPTION: it decides what ends
@@ -61,6 +78,14 @@ documentation:
 # top-level directory for images/ and why the source package was carrying
 # several hundred kilobytes of PNGs that the README renders from GitHub anyway.
 # A change to that file changes what ships.
+#
+# The documentation site made that file longer by three lines rather than two.
+# ^docs$ and ^mkdocs\.yml$ are the obvious pair. ^site$ is the one that is not,
+# because site/ is never committed: `mkdocs build` writes it next to mkdocs.yml
+# and .gitignore keeps it out of the repository. R CMD build does not read
+# .gitignore, so a tarball built on a machine that had previewed the site once
+# was carrying the rendered HTML anyway. Measured before that line was added:
+# 1.2 MB and 85 extra files, against 9 kB for the package itself.
 #
 # cran-comments.md is listed before it exists, so the first submission note
 # arrives labelled instead of arriving bare.
@@ -90,7 +115,9 @@ tests:
 # Everything under .github, not a list of the files there. Naming them one by
 # one would leave `.github/labeler.yml` itself uncovered, so the pull request
 # adding a rule to this file would arrive with no label, which is a small thing
-# that says exactly how such a list would age.
+# that says exactly how such a list would age. It aged well: the documentation
+# site arrived with .github/workflows/docs.yml, and this glob already covered
+# it, so nothing had to be added here for the new workflow to be labelled ci.
 ci:
   - changed-files:
       - any-glob-to-any-file:

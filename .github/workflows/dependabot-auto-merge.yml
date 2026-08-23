@@ -28,11 +28,25 @@ name: Dependabot auto-merge
 # looks like that, which is exactly why the check has to run on every pull
 # request rather than being trusted to a reading.
 #
-# Only one ecosystem actually reaches this workflow. Dependabot has no CRAN and
-# no Bioconductor updater, so ggplot2, ape and ggtree are not its business here:
-# what arrives is GitHub Actions version bumps, which is also the class where an
-# unattended merge is cheapest to be wrong about, since CI and CodeQL both run
-# on the very workflow files being changed.
+# Two ecosystems reach this workflow, and they are not equally cheap to be wrong
+# about. Dependabot has no CRAN and no Bioconductor updater, so ggplot2, ape and
+# ggtree are not its business here. What arrives is GitHub Actions version
+# bumps, where an unattended merge costs least because CI and CodeQL both run on
+# the very workflow files being changed, and mkdocs-material bumps from
+# docs/requirements.txt, where neither of them does: CodeQL's one language is
+# `actions`, so it never reads that file.
+#
+# What does read it is the Docs workflow, which runs `mkdocs build --strict` on
+# any pull request touching `docs/**`, and docs/requirements.txt is under
+# `docs/**`. It is not one of the three checks above, though, and `--auto` waits
+# only for the required ones, so a bump that breaks the build goes red beside a
+# merge that happens anyway. Marking it required is not the fix it looks like:
+# Docs is filtered by path, so on a pull request that touches none of those
+# paths it never reports at all, and a required check that never reports leaves
+# the pull request waiting for good. What bounds the cost instead is that
+# workflow's deploy job, which runs only after its build and reference jobs
+# pass, so a broken bump leaves the published pages exactly as they were until
+# someone fixes it.
 #
 # The waiting is GitHub's, through `gh pr merge --auto`, and that rests on two
 # repository settings rather than on anything this file can assert. Both are on

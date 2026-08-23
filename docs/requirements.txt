@@ -1,0 +1,16 @@
+# Documentation site build dependencies (Material for MkDocs).
+#   python3 -m venv .venv-docs
+#   .venv-docs/bin/pip install -r docs/requirements.txt
+#   .venv-docs/bin/mkdocs serve
+#
+# Material pulls mkdocs, pymdown-extensions and Pygments itself, so this file
+# holds one line. mkdocs-static-i18n is deliberately not here: the site is
+# English only, and adding it before there is anything to translate would put a
+# language switcher in the masthead that leads nowhere.
+#
+# Two other things this file does not cover, on purpose. The emblem and favicon
+# are built by .github/scripts/make_docs_emblem.py, which needs numpy and
+# Pillow, but it is run by hand when the artwork changes and its outputs are
+# committed, so the docs build never imports it. And the reference drift check
+# in .github/workflows/docs.yml runs under R, not Python.
+mkdocs-material~=9.7

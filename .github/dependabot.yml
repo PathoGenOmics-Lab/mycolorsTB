@@ -12,15 +12,22 @@
 #   * majors kept apart, in their own single pull request, because those are the
 #     ones that change what a job does and want a person
 #
-# There is exactly one ecosystem below, and that is a fact about Dependabot
-# rather than an omission here. Dependabot understands package managers, not
-# language repositories: it has no ecosystem for CRAN and none for Bioconductor,
-# and this package ships no Cargo.toml, no package.json and no requirements
-# file for it to read. The `uses:` lines in the workflows are the only manifest
-# in the repository it can parse, so they are the only thing it is pointed at.
+# There are two ecosystems below, and neither of them is this package. That is a
+# fact about Dependabot rather than an omission here. Dependabot understands
+# package managers, not language repositories: it has no ecosystem for CRAN and
+# none for Bioconductor, and this package ships no Cargo.toml and no
+# package.json. What it can parse in this repository is the `uses:` lines in the
+# workflows, and, since the documentation site landed, docs/requirements.txt,
+# which names the one Python package that builds the site. Those two are what it
+# is pointed at, and they are the whole of what it can see.
 #
-# That means the DESCRIPTION dependencies, ggplot2, ape, ggtree and grDevices,
-# are deliberately not covered. Nothing here could cover them. Dependabot cannot
+# This file said "exactly one ecosystem" until the site arrived, so it is worth
+# saying which part of that changed and which part did not. The second entry is
+# not a step towards covering the package: docs/requirements.txt is build
+# tooling for a website, and no user of mycolorsTB ever installs it.
+#
+# The DESCRIPTION dependencies, ggplot2, ape, ggtree and grDevices, are still
+# deliberately not covered. Nothing here could cover them. Dependabot cannot
 # read an Imports field, and ggtree is not even on CRAN: it comes from
 # Bioconductor, on its own release train. What watches those instead is R CMD
 # check in CI, run against R-devel with the dependencies resolved fresh on every
@@ -51,6 +58,54 @@
 version: 2
 
 updates:
+  # The documentation site's build environment: docs/requirements.txt, which
+  # .github/workflows/docs.yml installs before running `mkdocs build --strict`.
+  # It names one package, `mkdocs-material~=9.7`, because Material pulls mkdocs,
+  # pymdown-extensions and Pygments in itself. That one constraint is the only
+  # thing in this repository Dependabot can bump apart from the `uses:` lines
+  # below.
+  #
+  # Two open pull requests at most, the same limit as the actions entry: with
+  # one direct dependency and the two groups here, a third open pull request
+  # would mean something had gone wrong rather than that there was more to
+  # update. `~=9.7` accepts 9.7 and every later 9.x, so a 9.8 is a minor and
+  # travels in the routine group, while a 10.0 falls outside the constraint, is
+  # a major, and arrives on its own.
+  #
+  # The routine group merges itself once CI passes, like the actions one, and
+  # what makes that cheap is how little it can reach: these packages turn
+  # Markdown into HTML on a runner. Nothing in R/ imports them, they are not in
+  # DESCRIPTION, and ^docs$ and ^mkdocs\.yml$ in .Rbuildignore keep the site out
+  # of the built tarball, so no bump here can reach a CRAN submission or a
+  # reader's library.
+  #
+  # One way this ecosystem is unlike the other, worth knowing before trusting
+  # the green tick. The site does get built on the pull request: docs.yml runs
+  # `mkdocs build --strict` on anything touching `docs/**`, and the file this
+  # entry bumps, docs/requirements.txt, is under `docs/**`. So a bump that
+  # breaks the build goes red there. What that red tick is not is a required
+  # check, and `gh pr merge --auto` waits only for the required ones, so the
+  # merge happens beside it. Marking it required is not the fix it looks like;
+  # the comment at the top of .github/workflows/docs.yml says why. What bounds
+  # the cost instead is that same workflow's deploy job, which runs only after
+  # the build and reference jobs pass, so a broken bump leaves the published
+  # pages exactly as they were until someone fixes it.
+  - package-ecosystem: pip
+    directory: "/docs"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 2
+    labels: ["dependencies", "documentation"]
+    commit-message:
+      prefix: "docs"
+    groups:
+      docs-routine:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      docs-major:
+        patterns: ["*"]
+        update-types: ["major"]
+
   # The actions the workflows themselves pin. These go stale silently: a
   # deprecated runner image, or a Node version dropped from an action, is only
   # noticed when a job starts warning, or fails.
