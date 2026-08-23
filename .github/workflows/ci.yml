@@ -247,7 +247,19 @@ jobs:
           # move together: to adopt a newer roxygen2, run document() locally,
           # read the .Rd diff, commit man/, NAMESPACE and DESCRIPTION, and bump
           # this pin in the same change.
-          extra-packages: any::roxygen2@7.3.2
+          #
+          # `cran::` and not `any::`, which is the difference between a pin and
+          # the appearance of one. This was written `any::roxygen2@7.3.2` first,
+          # and the first run of this job installed roxygen2 8.1.0 anyway:
+          # `any::` means "from wherever", and pak takes the newest rather than
+          # reading a version off a ref it was not asked to resolve from CRAN.
+          # The job then failed on nine files, reporting exactly the drift it is
+          # built to report, except that the drift was its own. 8.x renames
+          # DESCRIPTION's RoxygenNote to Config/roxygen2/version and rewrites
+          # NAMESPACE, so the failure was loud; a pin that slipped between two
+          # 7.x releases would have been quieter and read as a real defect. The
+          # documented form for a version is `[cran::]package@version`.
+          extra-packages: cran::roxygen2@7.3.2
 
       - name: Regenerate the documentation
         run: roxygen2::roxygenise()
