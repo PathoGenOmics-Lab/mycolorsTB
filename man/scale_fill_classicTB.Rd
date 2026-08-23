@@ -4,11 +4,22 @@
 \alias{scale_fill_classicTB}
 \title{Scale Fill for ggplot2 Using classicTB Palette}
 \usage{
-scale_fill_classicTB()
+scale_fill_classicTB(...)
+}
+\arguments{
+\item{...}{Additional arguments passed to \code{\link[ggplot2:scale_manual]{ggplot2::scale_fill_manual()}},
+such as \code{name}, \code{labels} or \code{na.value}.}
 }
 \value{
 A ggplot2 scale object.
 }
 \description{
 Applies the \code{classicTB} palette to the fill aesthetic in a ggplot.
+}
+\examples{
+library(ggplot2)
+df <- data.frame(x = letters[1:5], y = 1, group = letters[1:5])
+ggplot(df, aes(x, y, fill = group)) +
+  geom_col() +
+  scale_fill_classicTB()
 }

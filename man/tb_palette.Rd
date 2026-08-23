@@ -7,7 +7,7 @@
 tb_palette(n, palette_name = "classicTB")
 }
 \arguments{
-\item{n}{The number of colors to generate.}
+\item{n}{The number of colors to generate. A single non-negative whole number.}
 
 \item{palette_name}{The name of the palette to use ("mycolors", "classicTB", or "pathogenomics").}
 }
@@ -15,9 +15,14 @@ tb_palette(n, palette_name = "classicTB")
 A character vector of n hex color codes.
 }
 \description{
-Uses color interpolation to create a custom number of colors from a given palette.
+Returns \code{n} colors from a package palette. The palette colors are
+returned unchanged while \code{n} does not exceed the palette size, and are
+interpolated only when more colors than the palette holds are requested.
 }
 \examples{
+# The first 5 colors of the palette, unchanged
+tb_palette(5, "classicTB")
+
 # Generate 20 colors from the 'classicTB' palette
 my_custom_colors <- tb_palette(20, "classicTB")
 plot(1:20, 1:20, col = my_custom_colors, pch = 19, cex = 3)

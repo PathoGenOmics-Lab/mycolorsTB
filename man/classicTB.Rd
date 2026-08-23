@@ -14,6 +14,7 @@ Color palette designed by the PathoGenOmics Lab.
 classicTB
 }
 \description{
-An unnamed vector of 14 colors derived from the \code{classicTB} theme.
+The same 14 colors as \link{mycolors}, but without lineage names, so that they can
+be applied positionally to any categorical variable.
 }
 \keyword{datasets}

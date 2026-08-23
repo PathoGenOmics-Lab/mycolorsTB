@@ -14,6 +14,8 @@ A ggplot object showing the colors of the chosen palette.
 }
 \description{
 Generates a ggplot visualization of a specified package palette.
+Each hex code is written in black or white, whichever remains readable on
+top of its own swatch.
 }
 \examples{
 view_palette("mycolors")
