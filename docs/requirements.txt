@@ -13,4 +13,4 @@
 # Pillow, but it is run by hand when the artwork changes and its outputs are
 # committed, so the docs build never imports it. And the reference drift check
 # in .github/workflows/docs.yml runs under R, not Python.
-mkdocs-material~=9.7
+mkdocs-material~=9.8
