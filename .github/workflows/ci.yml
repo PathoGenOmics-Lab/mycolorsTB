@@ -133,6 +133,35 @@ jobs:
       # The vignette is R Markdown, and knitr hands the result to pandoc. Every
       # leg builds it, so pandoc has to be present before setup-r, on Windows
       # and macOS as much as on Linux.
+      # XQuartz, and only on macOS, because without it this leg cannot even load
+      # the package. The chain is mycolorsTB -> ggtree -> shadowtext -> ggiraph
+      # -> gdtools, all of them hard Imports, and the gdtools binary that the
+      # public package manager serves for macOS arm64 is linked against five
+      # X11 libraries by absolute path:
+      #
+      #   /opt/X11/lib/{libXrender.1,libSM.6,libICE.6,libX11.6,libXext.6}.dylib
+      #
+      # Read off the shipped object with `otool -L`, not guessed. The runner
+      # image has no XQuartz, so dlopen fails, loading mycolorsTB fails, and
+      # R CMD check dies in the build phase with "lazy loading failed".
+      #
+      # This leg passed on 2026-09-02 and was red by 2026-11-01 without a line
+      # of this package changing: shadowtext 0.1.6 took ggiraph into Imports,
+      # which pulled gdtools in behind it. So the failure arrives on whatever
+      # pull request happens to be open when it lands, which is how a
+      # mkdocs-material bump in docs/ came to be blocked by an X11 library.
+      #
+      # Symlinking one library from Homebrew was the cheaper-looking fix and is
+      # the wrong one: there are five, they are wanted at exactly those paths,
+      # and a sixth would arrive silently. XQuartz puts all of them where the
+      # binary already looks.
+      #
+      # Not needed on Linux or Windows: the binaries there link against what
+      # those images already carry.
+      - name: Install XQuartz for the gdtools X11 libraries
+        if: runner.os == 'macOS'
+        run: brew install --cask xquartz
+
       - uses: r-lib/actions/setup-pandoc@v2
 
       - uses: r-lib/actions/setup-r@v2
